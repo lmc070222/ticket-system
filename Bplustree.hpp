@@ -167,6 +167,7 @@ public:
     InsertIntoParent(page_no, new_leaf.keys[0], curnode.next);
   }
   void Insert(KeyType &index, ValueType &value) {
+
     if (leaf_head_ == 0) {
       NodePage new_;
       new_.is_leaf = true;
@@ -182,6 +183,12 @@ public:
       fm.WriteHeader(&new_header);
       return;
     } else {
+      sjtu::vector<ValueType> a;
+      a = find(index);
+      for (int i = 0; i < a.size(); i++) {
+        if (a[i] == value)
+          return;
+      }
       NodePage curnode;
       uint32_t x = root_page_;
       while (true) {
@@ -297,7 +304,8 @@ public:
   }
   void balancedelete(uint32_t pageno) { // 删除节点低于M/2后维护节点平衡
     // 此处应该处理根节点失去平衡的情况
-    if (pageno == root_page_) return;
+    if (pageno == root_page_)
+      return;
     NodePage curnode;
     NodePage parentnode;
     NodePage leftnode;
