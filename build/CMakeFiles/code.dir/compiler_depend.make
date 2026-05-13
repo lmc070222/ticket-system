@@ -53,15 +53,12 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
   /usr/include/c++/13/bits/requires_hosted.h \
   /usr/include/c++/13/bits/std_abs.h \
   /usr/include/c++/13/bits/stl_algobase.h \
-  /usr/include/c++/13/bits/stl_bvector.h \
   /usr/include/c++/13/bits/stl_construct.h \
   /usr/include/c++/13/bits/stl_function.h \
   /usr/include/c++/13/bits/stl_iterator.h \
   /usr/include/c++/13/bits/stl_iterator_base_funcs.h \
   /usr/include/c++/13/bits/stl_iterator_base_types.h \
   /usr/include/c++/13/bits/stl_pair.h \
-  /usr/include/c++/13/bits/stl_uninitialized.h \
-  /usr/include/c++/13/bits/stl_vector.h \
   /usr/include/c++/13/bits/streambuf.tcc \
   /usr/include/c++/13/bits/streambuf_iterator.h \
   /usr/include/c++/13/bits/string_view.tcc \
@@ -69,7 +66,6 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
   /usr/include/c++/13/bits/uses_allocator.h \
   /usr/include/c++/13/bits/uses_allocator_args.h \
   /usr/include/c++/13/bits/utility.h \
-  /usr/include/c++/13/bits/vector.tcc \
   /usr/include/c++/13/cctype \
   /usr/include/c++/13/cerrno \
   /usr/include/c++/13/climits \
@@ -106,7 +102,6 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
   /usr/include/c++/13/tuple \
   /usr/include/c++/13/type_traits \
   /usr/include/c++/13/typeinfo \
-  /usr/include/c++/13/vector \
   /usr/include/ctype.h \
   /usr/include/endian.h \
   /usr/include/errno.h \
@@ -345,21 +340,7 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 
 /usr/include/x86_64-linux-gnu/bits/floatn-common.h:
 
-/usr/include/x86_64-linux-gnu/gnu/stubs.h:
-
-/usr/include/x86_64-linux-gnu/bits/endian.h:
-
-/usr/include/x86_64-linux-gnu/bits/cpu-set.h:
-
-/usr/include/x86_64-linux-gnu/bits/byteswap.h:
-
-/usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
-
 /usr/include/c++/13/bits/stl_construct.h:
-
-/usr/include/x86_64-linux-gnu/bits/types/timer_t.h:
-
-/home/lmc123456/Ticket-System-2026/BPT/src/vector.hpp:
 
 /usr/include/c++/13/bits/stl_algobase.h:
 
@@ -375,11 +356,11 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 
 /usr/include/c++/13/bits/ostream_insert.h:
 
+/usr/include/x86_64-linux-gnu/bits/cpu-set.h:
+
 /usr/include/c++/13/bits/invoke.h:
 
 /usr/include/c++/13/bits/locale_classes.tcc:
-
-/usr/include/c++/13/bits/stl_bvector.h:
 
 /usr/include/c++/13/bits/allocator.h:
 
@@ -412,8 +393,6 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 /usr/include/c++/13/bits/basic_ios.h:
 
 /usr/include/c++/13/bits/codecvt.h:
-
-/usr/include/c++/13/bits/stl_vector.h:
 
 /usr/include/x86_64-linux-gnu/bits/uintn-identity.h:
 
@@ -451,6 +430,10 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 
 /usr/include/c++/13/type_traits:
 
+/usr/include/x86_64-linux-gnu/bits/types/timer_t.h:
+
+/home/lmc123456/Ticket-System-2026/BPT/src/vector.hpp:
+
 /usr/include/c++/13/bits/locale_facets.tcc:
 
 /usr/include/c++/13/bits/requires_hosted.h:
@@ -462,10 +445,6 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 /usr/include/c++/13/backward/binders.h:
 
 /usr/include/c++/13/bits/stringfwd.h:
-
-/usr/include/x86_64-linux-gnu/bits/endianness.h:
-
-/usr/include/c++/13/bits/basic_string.h:
 
 /usr/include/stdc-predef.h:
 
@@ -529,6 +508,10 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 
 /usr/include/string.h:
 
+/usr/include/x86_64-linux-gnu/gnu/stubs.h:
+
+/usr/include/x86_64-linux-gnu/bits/endian.h:
+
 /usr/include/c++/13/bits/concept_check.h:
 
 /usr/include/c++/13/bits/alloc_traits.h:
@@ -540,8 +523,6 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 /usr/include/c++/13/bits/functexcept.h:
 
 /usr/include/c++/13/ios:
-
-/usr/include/c++/13/bits/stl_uninitialized.h:
 
 /usr/include/c++/13/bits/std_abs.h:
 
@@ -559,8 +540,6 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 
 /usr/include/c++/13/bits/utility.h:
 
-/usr/include/c++/13/bits/vector.tcc:
-
 /usr/include/x86_64-linux-gnu/bits/wchar2.h:
 
 /usr/include/c++/13/climits:
@@ -568,8 +547,6 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 /usr/include/x86_64-linux-gnu/bits/types/struct_timespec.h:
 
 /usr/include/c++/13/cstddef:
-
-/usr/include/c++/13/vector:
 
 /usr/include/c++/13/clocale:
 
@@ -686,3 +663,11 @@ CMakeFiles/code.dir/main.cpp.o: /home/lmc123456/Ticket-System-2026/BPT/main.cpp 
 /usr/include/x86_64-linux-gnu/bits/stdlib.h:
 
 /usr/include/x86_64-linux-gnu/asm/errno.h:
+
+/usr/include/x86_64-linux-gnu/bits/atomic_wide_counter.h:
+
+/usr/include/x86_64-linux-gnu/bits/byteswap.h:
+
+/usr/include/c++/13/bits/basic_string.h:
+
+/usr/include/x86_64-linux-gnu/bits/endianness.h:
