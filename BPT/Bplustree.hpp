@@ -30,7 +30,9 @@ public:
   public:
     std::fstream s;
     FileManager(const std::string &filename) {
+      s.open(filename, std::ios::in | std::ios::out | std::ios::binary);
       if (!s.is_open()) {
+        s.clear();
         s.open(filename, std::ios::out | std::ios::binary);
         s.close();
         s.open(filename, std::ios::in | std::ios::out | std::ios::binary);
@@ -58,7 +60,7 @@ public:
       s.seekp(0);
       s.write(reinterpret_cast<char *>(buf), sizeof(FileHeader));
     }
-    ~FileManager () {s.close();}
+    ~FileManager() { s.close(); }
   };
   const std::string name = "data";
   FileManager fm;
@@ -344,7 +346,7 @@ public:
           curnode.values[0] = leftnode.values[leftnode.key_num - 1];
           curnode.key_num++;
           leftnode.key_num--;
-          parentnode.keys[k - 1] = leftnode.keys[leftnode.key_num - 1];
+          parentnode.keys[k - 1] = curnode.keys[0];
           fm.WritePage(pageno, &curnode);
           fm.WritePage(parentno, &parentnode);
           fm.WritePage(parentnode.children[k - 1], &leftnode);
@@ -386,7 +388,7 @@ public:
           }
           curnode.key_num++;
           rightnode.key_num--;
-          parentnode.keys[k] = curnode.keys[curnode.key_num - 1];
+          parentnode.keys[k] = rightnode.keys[0];
           fm.WritePage(pageno, &curnode);
           fm.WritePage(parentno, &parentnode);
           fm.WritePage(parentnode.children[k + 1], &rightnode);
@@ -507,7 +509,8 @@ public:
       }
       k++;
       if (k >= curnode.key_num) {
-        if (curnode.next != 0)search(curnode.next, index, value);
+        if (curnode.next != 0)
+          search(curnode.next, index, value);
         return;
       }
     }
@@ -539,7 +542,7 @@ public:
       fm.ReadPage(curnode.next, &curnode);
     }
   }
-  void input (uint32_t pageno) {
+  void input(uint32_t pageno) {
     std::cerr << pageno << std::endl;
     NodePage x;
     uint32_t num;
@@ -547,16 +550,16 @@ public:
     fm.ReadPage(num, &x);
     if (x.is_leaf == true) {
       std::cerr << "leaf\n";
-      for (int i = 0;i < x.key_num;i++) {
+      for (int i = 0; i < x.key_num; i++) {
         std::cout << x.values[i] << ' ';
       }
       std::cout << std::endl;
       return;
     }
-      std::cerr << x.key_num << " children\n";
-      for (int i = 0;i <= x.key_num;i++) {
-        std::cerr << pageno << "'s child is " << x.values[i] << std::endl;
-        input(x.children[i]);
+    std::cerr << x.key_num << " children\n";
+    for (int i = 0; i <= x.key_num; i++) {
+      std::cerr << pageno << "'s child is " << x.values[i] << std::endl;
+      input(x.children[i]);
     }
   }
 };
