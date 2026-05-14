@@ -67,7 +67,7 @@ void merge_sort(sjtu::vector<int> &v) {
 int main() {
   int n;
   cin >> n;
-  char a[64];
+  char a[65];
   int value;
   Bplustree<String64, int, 50> tree;
   string order;

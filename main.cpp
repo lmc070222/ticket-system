@@ -4,11 +4,11 @@ using namespace std;
 #include <cstring>
 #pragma pack(push, 1)
 struct String64 {
-  char data[64];
-  String64() { memset(data, 0, 64); }
+  char data[65];
+  String64() { memset(data, 0, 65); }
   String64(const char *s) {
-    strncpy(data, s, 63);
-    data[63] = '\0';
+    strncpy(data, s, 64);
+    data[64] = '\0';
   }
   String64 &operator=(const String64 &other) {
     memcpy(data, other.data, 64);
