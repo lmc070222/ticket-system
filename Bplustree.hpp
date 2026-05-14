@@ -58,6 +58,7 @@ public:
       s.seekp(0);
       s.write(reinterpret_cast<char *>(buf), sizeof(FileHeader));
     }
+    ~FileManager () {s.close();}
   };
   const std::string name = "data";
   FileManager fm;
