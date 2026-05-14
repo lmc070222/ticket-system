@@ -4,12 +4,12 @@ using namespace std;
 #include <cstring>
 #pragma pack(push, 1)
 struct String64 {
-  char data[65];
-  String64() { memset(data, 0, 64); }
-  String64(const char *s) {
-    strncpy(data, s, 64);
-    data[64] = '\0';
-  }
+   char data[64];                         
+    String64() { memset(data, 0, 64); }
+    String64(const char *s) {
+        strncpy(data, s, 63);
+        data[63] = '\0';
+    }
   String64 &operator=(const String64 &other) {
     memcpy(data, other.data, 64);
     return *this;
@@ -69,7 +69,7 @@ int main() {
   cin >> n;
   char a[65];
   int value;
-  Bplustree<String64, int, 50> tree;
+  Bplustree<String64, int, 3> tree;
   string order;
   for (int i = 1; i <= n; i++) {
     cin >> order;
@@ -87,8 +87,9 @@ int main() {
       sjtu::vector<int> ans = tree.find(index);
       if (ans.size() != 0) {
         merge_sort(ans);
-        for (int i = 0; i < ans.size(); i++) {
-          std::cout << ans[i] << ' ';
+        std::cout << ans[0] ;
+        for (int i = 1; i < ans.size(); i++) {
+          std::cout << ' ' << ans[i];
         }
         std::cout << std::endl;
       } else {
@@ -96,4 +97,6 @@ int main() {
       }
     }
   }
+  //std::cout << "块内容" << endl;
+  //tree.input (tree.root_page_);
 }

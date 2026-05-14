@@ -7,8 +7,8 @@ struct String64 {
   char data[65];
   String64() { memset(data, 0, 65); }
   String64(const char *s) {
-    strncpy(data, s, 64);
-    data[64] = '\0';
+    strncpy(data, s, 65);
+    data[65] = '\0';
   }
   String64 &operator=(const String64 &other) {
     memcpy(data, other.data, 64);
@@ -67,7 +67,7 @@ void merge_sort(sjtu::vector<int> &v) {
 int main() {
   int n;
   cin >> n;
-  char a[64];
+  char a[65];
   int value;
   Bplustree<String64, int, 50> tree;
   string order;

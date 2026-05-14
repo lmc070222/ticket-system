@@ -95,6 +95,13 @@ public:
 
     new_node.parent = curnode.parent;
     uint32_t new_page = fm.AllocPage(&new_node);
+    for (int i = 0; i <= new_node.key_num; i++) {
+      uint32_t child_no = new_node.children[i];
+      NodePage child;
+      fm.ReadPage(child_no, &child);
+      child.parent = new_page;
+      fm.WritePage(child_no, &child);
+    }
     fm.WritePage(page_no, &curnode);
     InsertIntoParent(page_no, promote_key, new_page);
   }
@@ -165,11 +172,10 @@ public:
     curnode.next = fm.AllocPage(&new_leaf);
 
     fm.WritePage(page_no, &curnode);
-    InsertIntoParent(page_no, new_leaf.keys[0], curnode.next);
+    InsertIntoParent(page_no, curnode.keys[curnode.key_num - 1], curnode.next);
   }
   void Insert(KeyType &index, ValueType &value) {
-
-    if (leaf_head_ == 0) {
+    if (root_page_ == 0) {
       NodePage new_;
       new_.is_leaf = true;
       new_.key_num = 1;
@@ -269,6 +275,11 @@ public:
       for (int i = curnode.key_num + 1;
            i < curnode.key_num + afternode.key_num + 2; i++) {
         curnode.children[i] = afternode.children[t1];
+        uint32_t moved_child_no = curnode.children[i];
+        NodePage moved_child;
+        fm.ReadPage(moved_child_no, &moved_child);
+        moved_child.parent = curno; // 指向被合并后的左节点页号
+        fm.WritePage(moved_child_no, &moved_child);
         t1++;
       }
       curnode.key_num = curnode.key_num + afternode.key_num + 1;
@@ -333,7 +344,7 @@ public:
           curnode.values[0] = leftnode.values[leftnode.key_num - 1];
           curnode.key_num++;
           leftnode.key_num--;
-          parentnode.keys[k - 1] = curnode.keys[0];
+          parentnode.keys[k - 1] = leftnode.keys[leftnode.key_num - 1];
           fm.WritePage(pageno, &curnode);
           fm.WritePage(parentno, &parentnode);
           fm.WritePage(parentnode.children[k - 1], &leftnode);
@@ -348,6 +359,11 @@ public:
           }
           curnode.keys[0] = parentnode.keys[k - 1];
           curnode.children[0] = leftnode.children[leftnode.key_num];
+          uint32_t moved_child_no = curnode.children[0];
+          NodePage moved_child;
+          fm.ReadPage(moved_child_no, &moved_child);
+          moved_child.parent = pageno; // 指向 curnode 的页号
+          fm.WritePage(moved_child_no, &moved_child);
           parentnode.keys[k - 1] = leftnode.keys[leftnode.key_num - 1];
           curnode.key_num++;
           leftnode.key_num--;
@@ -370,7 +386,7 @@ public:
           }
           curnode.key_num++;
           rightnode.key_num--;
-          parentnode.keys[k] = rightnode.keys[0];
+          parentnode.keys[k] = curnode.keys[curnode.key_num - 1];
           fm.WritePage(pageno, &curnode);
           fm.WritePage(parentno, &parentnode);
           fm.WritePage(parentnode.children[k + 1], &rightnode);
@@ -379,6 +395,11 @@ public:
         if (curnode.is_leaf == false) { // 非叶子节点
           curnode.keys[curnode.key_num] = parentnode.keys[k];
           curnode.children[curnode.key_num + 1] = rightnode.children[0];
+          uint32_t moved_child_no = curnode.children[curnode.key_num + 1];
+          NodePage moved_child;
+          fm.ReadPage(moved_child_no, &moved_child);
+          moved_child.parent = pageno;
+          fm.WritePage(moved_child_no, &moved_child);
           curnode.key_num++;
           parentnode.keys[k] = rightnode.keys[0];
           for (int i = 0; i < rightnode.key_num - 1; i++) {
@@ -486,7 +507,7 @@ public:
       }
       k++;
       if (k >= curnode.key_num) {
-        search(curnode.next, index, value);
+        if (curnode.next != 0)search(curnode.next, index, value);
         return;
       }
     }
@@ -513,9 +534,29 @@ public:
         if (curnode.keys[i] == key)
           ans.push_back(curnode.values[i]);
       }
-      if (curnode.keys[curnode.key_num - 1] != key or curnode.next == 0)
+      if (curnode.next == 0 or curnode.keys[curnode.key_num - 1] > key)
         return ans;
       fm.ReadPage(curnode.next, &curnode);
+    }
+  }
+  void input (uint32_t pageno) {
+    std::cerr << pageno << std::endl;
+    NodePage x;
+    uint32_t num;
+    num = pageno;
+    fm.ReadPage(num, &x);
+    if (x.is_leaf == true) {
+      std::cerr << "leaf\n";
+      for (int i = 0;i < x.key_num;i++) {
+        std::cout << x.values[i] << ' ';
+      }
+      std::cout << std::endl;
+      return;
+    }
+      std::cerr << x.key_num << " children\n";
+      for (int i = 0;i <= x.key_num;i++) {
+        std::cerr << pageno << "'s child is " << x.values[i] << std::endl;
+        input(x.children[i]);
     }
   }
 };
