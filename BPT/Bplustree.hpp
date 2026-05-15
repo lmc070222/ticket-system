@@ -135,9 +135,9 @@ public:
     uint32_t parentno = leftnode.parent;
     NodePage parent;
     fm.ReadPage(parentno, &parent);
-    int k = parent.key_num;
-    for (int i = 0; i < parent.key_num; i++) {
-      if (parent.keys[i] >= key) {
+    int k = -1;
+    for (int i = 0; i <= parent.key_num; i++) {
+      if (parent.children[i] == leftPageNo) {
         k = i;
         break;
       }
@@ -346,7 +346,7 @@ public:
           curnode.values[0] = leftnode.values[leftnode.key_num - 1];
           curnode.key_num++;
           leftnode.key_num--;
-          parentnode.keys[k - 1] = curnode.keys[0];
+          parentnode.keys[k - 1] = leftnode.keys[leftnode.key_num - 1];
           fm.WritePage(pageno, &curnode);
           fm.WritePage(parentno, &parentnode);
           fm.WritePage(parentnode.children[k - 1], &leftnode);
@@ -388,7 +388,7 @@ public:
           }
           curnode.key_num++;
           rightnode.key_num--;
-          parentnode.keys[k] = rightnode.keys[0];
+          parentnode.keys[k] = curnode.keys[curnode.key_num - 1];
           fm.WritePage(pageno, &curnode);
           fm.WritePage(parentno, &parentnode);
           fm.WritePage(parentnode.children[k + 1], &rightnode);
