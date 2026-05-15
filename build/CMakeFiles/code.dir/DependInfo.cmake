@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/lmc123456/Ticket-System-2026/BPT/main.cpp" "CMakeFiles/code.dir/main.cpp.o" "gcc" "CMakeFiles/code.dir/main.cpp.o.d"
+  "/home/lmc123456/Ticket-System-2026/main.cpp" "CMakeFiles/code.dir/main.cpp.o" "gcc" "CMakeFiles/code.dir/main.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

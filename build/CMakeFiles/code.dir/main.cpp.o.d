@@ -1,8 +1,7 @@
 CMakeFiles/code.dir/main.cpp.o: \
- /home/lmc123456/Ticket-System-2026/BPT/main.cpp \
- /usr/include/stdc-predef.h \
- /home/lmc123456/Ticket-System-2026/BPT/Bplustree.hpp \
- /home/lmc123456/Ticket-System-2026/BPT/src/vector.hpp \
+ /home/lmc123456/Ticket-System-2026/main.cpp /usr/include/stdc-predef.h \
+ /home/lmc123456/Ticket-System-2026/Bplustree.hpp \
+ /home/lmc123456/Ticket-System-2026/src/vector.hpp \
  /usr/include/c++/13/climits \
  /usr/include/x86_64-linux-gnu/c++/13/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/13/bits/os_defines.h \
@@ -27,7 +26,7 @@ CMakeFiles/code.dir/main.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h /usr/include/c++/13/cstddef \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/stddef.h \
- /home/lmc123456/Ticket-System-2026/BPT/src/exceptions.hpp \
+ /home/lmc123456/Ticket-System-2026/src/exceptions.hpp \
  /usr/include/c++/13/cstring /usr/include/string.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__locale_t.h \
