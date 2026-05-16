@@ -69,7 +69,7 @@ int main() {
   cin >> n;
   char a[65];
   int value;
-  Bplustree<String64, int, 60> tree;
+  Bplustree<String64, int, 50> tree;
   string order;
   for (int i = 1; i <= n; i++) {
     cin >> order;
