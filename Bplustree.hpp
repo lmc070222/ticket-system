@@ -383,9 +383,9 @@ public:
           fm.ReadPage(moved_child_no, &moved_child);
           moved_child.parent = pageno; // 指向 curnode 的页号
           fm.WritePage(moved_child_no, &moved_child);
-          parentnode.keys[k - 1] = leftnode.keys[leftnode.key_num - 1];
           curnode.key_num++;
           leftnode.key_num--;
+          parentnode.keys[k - 1] = leftnode.keys[leftnode.key_num - 1];
           fm.WritePage(pageno, &curnode);
           fm.WritePage(parentno, &parentnode);
           fm.WritePage(parentnode.children[k - 1], &leftnode);
