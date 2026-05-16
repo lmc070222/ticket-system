@@ -192,12 +192,6 @@ public:
       fm.WriteHeader(&new_header);
       return;
     } else {
-      sjtu::vector<ValueType> a;
-      a = find(index);
-      for (int i = 0; i < a.size(); i++) {
-        if (a[i] == value)
-          return;
-      }
       NodePage curnode;
       uint32_t x = root_page_;
       while (true) {
@@ -211,6 +205,28 @@ public:
               break;
           }
           x = curnode.children[i];
+        }
+      }
+      NodePage check_node = curnode; 
+      while (true) {
+        bool stop_search = false;
+        for (int i = 0; i < check_node.key_num; i++) {
+          if (check_node.keys[i] == index and check_node.values[i] == value) {
+            return; 
+          }
+          if (check_node.keys[i] > index) {
+            stop_search = true; 
+            break;
+          }
+        }
+        
+        if (stop_search) break;
+        if (check_node.key_num > 0 && 
+            check_node.keys[check_node.key_num - 1] == index && 
+            check_node.next != 0) {
+          fm.ReadPage(check_node.next, &check_node);
+        } else {
+          break;
         }
       }
       int k = curnode.key_num;
@@ -229,6 +245,7 @@ public:
       curnode.keys[k] = index;
       curnode.values[k] = value;
       fm.WritePage(x, &curnode);
+      
       if (curnode.key_num <= M)
         return;
       else {
