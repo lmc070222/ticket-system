@@ -8,48 +8,60 @@
 #include <limits>
 #include <string>
 struct String64 {
-    char data[64];                // 必须 64 字节
-    String64() { memset(data, 0, 64); }
-    String64(const char *s) {
-        strncpy(data, s, 63);
-        data[63] = '\0';
-    }
-    String64 &operator=(const String64 &other) {
-        memcpy(data, other.data, 64);
-        return *this;
-    }
-    bool operator<(const String64 &other) const  { return strcmp(data, other.data) < 0; }
-    bool operator>(const String64 &other) const  { return strcmp(data, other.data) > 0; }
-    bool operator>=(const String64 &other) const { return strcmp(data, other.data) >= 0; }
-    bool operator<=(const String64 &other) const { return strcmp(data, other.data) <= 0; }
-    bool operator==(const String64 &other) const { return strcmp(data, other.data) == 0; }
-    bool operator!=(const String64 &other) const { return strcmp(data, other.data) != 0; }
+  char data[64];
+  String64() { memset(data, 0, 64); }
+  String64(const char *s) {
+    strncpy(data, s, 63);
+    data[63] = '\0';
+  }
+  String64 &operator=(const String64 &other) {
+    memcpy(data, other.data, 64);
+    return *this;
+  }
+  bool operator<(const String64 &other) const {
+    return strcmp(data, other.data) < 0;
+  }
+  bool operator>(const String64 &other) const {
+    return strcmp(data, other.data) > 0;
+  }
+  bool operator>=(const String64 &other) const {
+    return strcmp(data, other.data) >= 0;
+  }
+  bool operator<=(const String64 &other) const {
+    return strcmp(data, other.data) <= 0;
+  }
+  bool operator==(const String64 &other) const {
+    return strcmp(data, other.data) == 0;
+  }
+  bool operator!=(const String64 &other) const {
+    return strcmp(data, other.data) != 0;
+  }
 };
 struct IndexValueKey {
-    String64 index;
-    int value;
+  String64 index;
+  int value;
 
-    IndexValueKey() : value(0) {}
-    IndexValueKey(const String64 &idx, int val) : index(idx), value(val) {}
-
-    // 完整比较（用于 insert / delete）
-    bool operator<(const IndexValueKey &other) const {
-        if (index < other.index) return true;
-        if (other.index < index) return false;
-        return value < other.value;
-    }
-    bool operator>(const IndexValueKey &other) const { return other < *this; }
-    bool operator>=(const IndexValueKey &other) const { return !(*this < other); }
-    bool operator<=(const IndexValueKey &other) const { return !(other < *this); }
-    bool operator==(const IndexValueKey &other) const {
-        return index == other.index && value == other.value;
-    }
-    bool operator!=(const IndexValueKey &other) const { return !(*this == other); }
-
-    // 仅比较 index 的辅助函数（供 find_by_index 使用）
-    static bool compareIndex(const IndexValueKey &a, const IndexValueKey &b) {
-        return a.index < b.index;
-    }
+  IndexValueKey() : value(0) {}
+  IndexValueKey(const String64 &idx, int val) : index(idx), value(val) {}
+  bool operator<(const IndexValueKey &other) const {
+    if (index < other.index)
+      return true;
+    if (other.index < index)
+      return false;
+    return value < other.value;
+  }
+  bool operator>(const IndexValueKey &other) const { return other < *this; }
+  bool operator>=(const IndexValueKey &other) const { return !(*this < other); }
+  bool operator<=(const IndexValueKey &other) const { return !(other < *this); }
+  bool operator==(const IndexValueKey &other) const {
+    return index == other.index && value == other.value;
+  }
+  bool operator!=(const IndexValueKey &other) const {
+    return !(*this == other);
+  }
+  static bool compareIndex(const IndexValueKey &a, const IndexValueKey &b) {
+    return a.index < b.index;
+  }
 };
 template <typename KeyType, typename ValueType, int M> class Bplustree {
 public:
@@ -69,7 +81,7 @@ public:
     };
     uint32_t next = 0;
   };
-  #pragma pack(pop)
+#pragma pack(pop)
   class FileManager {
   public:
     std::fstream s;
@@ -78,33 +90,36 @@ public:
       bool is_dirty = false;
       NodePage page;
     };
-    static const int CACHE_SIZE = 16; 
+    static const int CACHE_SIZE = 16;
     CachePage cache[CACHE_SIZE];
     int replace_idx = 0;
 
-    int getvalue (uint32_t a) {
-      if (a == 0) return -1; 
+    int getvalue(uint32_t a) {
+      if (a == 0)
+        return -1;
       for (int i = 0; i < CACHE_SIZE; i++) {
-        if (cache[i].page_no == a) return i;
+        if (cache[i].page_no == a)
+          return i;
       }
       return -1;
     }
 
-    int getfree ( ) {
+    int getfree() {
       for (int i = 0; i < CACHE_SIZE; i++) {
-        if (cache[i].page_no == 0) return i;
+        if (cache[i].page_no == 0)
+          return i;
       }
       int idx = replace_idx;
       replace_idx = (replace_idx + 1) % CACHE_SIZE;
       return idx;
     }
 
-    void flush (int a) {
+    void flush(int a) {
       if (cache[a].page_no != 0 and cache[a].is_dirty == true) {
-          s.clear();
-          s.seekp((cache[a].page_no - 1) * sizeof(NodePage) + sizeof(FileHeader));
-          s.write(reinterpret_cast<char *>(&cache[a].page), sizeof(NodePage));
-          cache[a].is_dirty = false;
+        s.clear();
+        s.seekp((cache[a].page_no - 1) * sizeof(NodePage) + sizeof(FileHeader));
+        s.write(reinterpret_cast<char *>(&cache[a].page), sizeof(NodePage));
+        cache[a].is_dirty = false;
       }
     }
 
@@ -119,20 +134,21 @@ public:
     }
 
     void ReadPage(uint32_t page_no, NodePage *buf) {
-      memset(buf, 0, sizeof(NodePage)); 
-      if (page_no == 0) return; 
+      memset(buf, 0, sizeof(NodePage));
+      if (page_no == 0)
+        return;
 
       int idx = getvalue(page_no);
-      if (idx != -1) { 
+      if (idx != -1) {
         *buf = cache[idx].page;
         return;
       }
-      s.clear(); 
+      s.clear();
       s.seekg((page_no - 1) * sizeof(NodePage) + sizeof(FileHeader));
       s.read(reinterpret_cast<char *>(buf), sizeof(NodePage));
-      
+
       int idx_free = getfree();
-      flush(idx_free); 
+      flush(idx_free);
       cache[idx_free].page_no = page_no;
       cache[idx_free].is_dirty = false;
       cache[idx_free].page = *buf;
@@ -144,7 +160,7 @@ public:
         flush(idx);
       }
       cache[idx].page_no = page_no;
-      cache[idx].is_dirty = true; 
+      cache[idx].is_dirty = true;
       cache[idx].page = *buf;
     }
 
@@ -152,13 +168,17 @@ public:
       s.clear();
       s.seekp(0, std::ios::end);
       auto current_pos = s.tellp();
-      uint32_t new_page = (static_cast<long long>(current_pos) - sizeof(FileHeader)) / sizeof(NodePage) + 1;
+      uint32_t new_page =
+          (static_cast<long long>(current_pos) - sizeof(FileHeader)) /
+              sizeof(NodePage) +
+          1;
       s.write(reinterpret_cast<char *>(buf), sizeof(NodePage));
       int idx = getvalue(new_page);
-      if (idx == -1) idx = getfree();
+      if (idx == -1)
+        idx = getfree();
       flush(idx);
       cache[idx].page_no = new_page;
-      cache[idx].is_dirty = false; 
+      cache[idx].is_dirty = false;
       cache[idx].page = *buf;
       return new_page;
     }
@@ -175,11 +195,11 @@ public:
       s.write(reinterpret_cast<char *>(buf), sizeof(FileHeader));
     }
 
-    ~FileManager() { 
+    ~FileManager() {
       for (int i = 0; i < CACHE_SIZE; i++) {
-        flush(i); 
+        flush(i);
       }
-      s.close(); 
+      s.close();
     }
   };
   const std::string name = "data";
@@ -327,22 +347,23 @@ public:
           x = curnode.children[i];
         }
       }
-      NodePage check_node = curnode; 
+      NodePage check_node = curnode;
       while (true) {
         bool stop_search = false;
         for (int i = 0; i < check_node.key_num; i++) {
           if (check_node.keys[i] == index and check_node.values[i] == value) {
-            return; 
+            return;
           }
           if (check_node.keys[i] > index) {
-            stop_search = true; 
+            stop_search = true;
             break;
           }
         }
-        
-        if (stop_search) break;
-        if (check_node.key_num > 0 && 
-            check_node.keys[check_node.key_num - 1] == index && 
+
+        if (stop_search)
+          break;
+        if (check_node.key_num > 0 &&
+            check_node.keys[check_node.key_num - 1] == index &&
             check_node.next != 0) {
           fm.ReadPage(check_node.next, &check_node);
         } else {
@@ -365,7 +386,7 @@ public:
       curnode.keys[k] = index;
       curnode.values[k] = value;
       fm.WritePage(x, &curnode);
-      
+
       if (curnode.key_num <= M)
         return;
       else {
@@ -417,7 +438,7 @@ public:
         uint32_t moved_child_no = curnode.children[i];
         NodePage moved_child;
         fm.ReadPage(moved_child_no, &moved_child);
-        moved_child.parent = curno; // 指向被合并后的左节点页号
+        moved_child.parent = curno;
         fm.WritePage(moved_child_no, &moved_child);
         t1++;
       }
@@ -453,8 +474,7 @@ public:
     }
     balancedelete(curnode.parent);
   }
-  void balancedelete(uint32_t pageno) { // 删除节点低于M/2后维护节点平衡
-    // 此处应该处理根节点失去平衡的情况
+  void balancedelete(uint32_t pageno) {
     if (pageno == root_page_)
       return;
     NodePage curnode;
@@ -602,8 +622,9 @@ public:
       }
     }
   }
- void deletenode(KeyType &index, ValueType &value) {
-    if (root_page_ == 0) return;
+  void deletenode(KeyType &index, ValueType &value) {
+    if (root_page_ == 0)
+      return;
     NodePage curnode;
     uint32_t x = root_page_;
     while (true) {
@@ -622,10 +643,12 @@ public:
     while (true) {
       int k = 0;
       for (; k < curnode.key_num; k++) {
-        if (curnode.keys[k] >= index) break;
+        if (curnode.keys[k] >= index)
+          break;
       }
       while (k < curnode.key_num) {
-        if (curnode.keys[k] > index) return;
+        if (curnode.keys[k] > index)
+          return;
         if (curnode.keys[k] == index && curnode.values[k] == value) {
           curnode.key_num--;
           for (int i = k; i < curnode.key_num; i++) {
@@ -644,46 +667,43 @@ public:
         x = curnode.next;
         fm.ReadPage(x, &curnode);
       } else {
-        return; 
+        return;
       }
     }
   }
- // 根据 index 查找所有值，结果自然升序，无需排序
-sjtu::vector<ValueType> find_by_index(const String64 &index) {
+  sjtu::vector<ValueType> find_by_index(const String64 &index) {
     sjtu::vector<ValueType> ans;
-    if (root_page_ == 0) return ans;
-
-    // 构造下限键：(index, INT_MIN)
+    if (root_page_ == 0)
+      return ans;
     IndexValueKey lower_key(index, std::numeric_limits<int>::min());
-
-    // 从根开始找到第一个可能包含该 index 的叶子
     uint32_t cur_page = root_page_;
     NodePage cur_node;
     while (true) {
-        fm.ReadPage(cur_page, &cur_node);
-        if (cur_node.is_leaf) break;
-        int i = 0;
-        for (; i < cur_node.key_num; ++i) {
-            if (cur_node.keys[i] >= lower_key) break;   // 利用复合键的比较
-        }
-        cur_page = cur_node.children[i];
+      fm.ReadPage(cur_page, &cur_node);
+      if (cur_node.is_leaf)
+        break;
+      int i = 0;
+      for (; i < cur_node.key_num; ++i) {
+        if (cur_node.keys[i] >= lower_key)
+          break;
+      }
+      cur_page = cur_node.children[i];
     }
-
-    // 沿叶子链表收集所有 index 匹配的值
     while (true) {
-        fm.ReadPage(cur_page, &cur_node);
-        for (int i = 0; i < cur_node.key_num; ++i) {
-            if (cur_node.keys[i].index == index) {
-                ans.push_back(cur_node.keys[i].value);   // 复合键中取出 value
-            } else if (cur_node.keys[i].index > index) {
-                return ans;   // 已超出范围
-            }
+      fm.ReadPage(cur_page, &cur_node);
+      for (int i = 0; i < cur_node.key_num; ++i) {
+        if (cur_node.keys[i].index == index) {
+          ans.push_back(cur_node.keys[i].value);
+        } else if (cur_node.keys[i].index > index) {
+          return ans;
         }
-        if (cur_node.next == 0) break;
-        cur_page = cur_node.next;
+      }
+      if (cur_node.next == 0)
+        break;
+      cur_page = cur_node.next;
     }
     return ans;
-}
+  }
   void input(uint32_t pageno) {
     std::cerr << pageno << std::endl;
     NodePage x;
