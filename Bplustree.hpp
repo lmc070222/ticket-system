@@ -5,8 +5,52 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <limits>
 #include <string>
+struct String64 {
+    char data[64];                // 必须 64 字节
+    String64() { memset(data, 0, 64); }
+    String64(const char *s) {
+        strncpy(data, s, 63);
+        data[63] = '\0';
+    }
+    String64 &operator=(const String64 &other) {
+        memcpy(data, other.data, 64);
+        return *this;
+    }
+    bool operator<(const String64 &other) const  { return strcmp(data, other.data) < 0; }
+    bool operator>(const String64 &other) const  { return strcmp(data, other.data) > 0; }
+    bool operator>=(const String64 &other) const { return strcmp(data, other.data) >= 0; }
+    bool operator<=(const String64 &other) const { return strcmp(data, other.data) <= 0; }
+    bool operator==(const String64 &other) const { return strcmp(data, other.data) == 0; }
+    bool operator!=(const String64 &other) const { return strcmp(data, other.data) != 0; }
+};
+struct IndexValueKey {
+    String64 index;
+    int value;
 
+    IndexValueKey() : value(0) {}
+    IndexValueKey(const String64 &idx, int val) : index(idx), value(val) {}
+
+    // 完整比较（用于 insert / delete）
+    bool operator<(const IndexValueKey &other) const {
+        if (index < other.index) return true;
+        if (other.index < index) return false;
+        return value < other.value;
+    }
+    bool operator>(const IndexValueKey &other) const { return other < *this; }
+    bool operator>=(const IndexValueKey &other) const { return !(*this < other); }
+    bool operator<=(const IndexValueKey &other) const { return !(other < *this); }
+    bool operator==(const IndexValueKey &other) const {
+        return index == other.index && value == other.value;
+    }
+    bool operator!=(const IndexValueKey &other) const { return !(*this == other); }
+
+    // 仅比较 index 的辅助函数（供 find_by_index 使用）
+    static bool compareIndex(const IndexValueKey &a, const IndexValueKey &b) {
+        return a.index < b.index;
+    }
+};
 template <typename KeyType, typename ValueType, int M> class Bplustree {
 public:
   struct FileHeader {
@@ -604,35 +648,42 @@ public:
       }
     }
   }
-  sjtu::vector<ValueType> find(KeyType key) {
+ // 根据 index 查找所有值，结果自然升序，无需排序
+sjtu::vector<ValueType> find_by_index(const String64 &index) {
     sjtu::vector<ValueType> ans;
     if (root_page_ == 0) return ans;
-    
-    NodePage curnode;
-    uint32_t x = root_page_;
+
+    // 构造下限键：(index, INT_MIN)
+    IndexValueKey lower_key(index, std::numeric_limits<int>::min());
+
+    // 从根开始找到第一个可能包含该 index 的叶子
+    uint32_t cur_page = root_page_;
+    NodePage cur_node;
     while (true) {
-      fm.ReadPage(x, &curnode);
-      if (curnode.is_leaf == true)
-        break;
-      else {
+        fm.ReadPage(cur_page, &cur_node);
+        if (cur_node.is_leaf) break;
         int i = 0;
-        for (; i < curnode.key_num; i++) {
-          if (curnode.keys[i] >= key)
-            break;
+        for (; i < cur_node.key_num; ++i) {
+            if (cur_node.keys[i] >= lower_key) break;   // 利用复合键的比较
         }
-        x = curnode.children[i];
-      }
+        cur_page = cur_node.children[i];
     }
+
+    // 沿叶子链表收集所有 index 匹配的值
     while (true) {
-      for (int i = 0; i < curnode.key_num; i++) {
-        if (curnode.keys[i] == key)
-          ans.push_back(curnode.values[i]);
-      }
-      if (curnode.next == 0 || curnode.key_num == 0 || curnode.keys[curnode.key_num - 1] > key)
-        return ans;
-      fm.ReadPage(curnode.next, &curnode);
+        fm.ReadPage(cur_page, &cur_node);
+        for (int i = 0; i < cur_node.key_num; ++i) {
+            if (cur_node.keys[i].index == index) {
+                ans.push_back(cur_node.keys[i].value);   // 复合键中取出 value
+            } else if (cur_node.keys[i].index > index) {
+                return ans;   // 已超出范围
+            }
+        }
+        if (cur_node.next == 0) break;
+        cur_page = cur_node.next;
     }
-  }
+    return ans;
+}
   void input(uint32_t pageno) {
     std::cerr << pageno << std::endl;
     NodePage x;
