@@ -25,10 +25,45 @@ public:
     };
     uint32_t next = 0;
   };
-#pragma pack(pop)
+  #pragma pack(pop)
   class FileManager {
   public:
     std::fstream s;
+    struct CachePage {
+      uint32_t page_no = 0;
+      bool is_dirty = false;
+      NodePage page;
+    };
+    static const int CACHE_SIZE = 16; 
+    CachePage cache[CACHE_SIZE];
+    int replace_idx = 0;
+
+    int getvalue (uint32_t a) {
+      if (a == 0) return -1; 
+      for (int i = 0; i < CACHE_SIZE; i++) {
+        if (cache[i].page_no == a) return i;
+      }
+      return -1;
+    }
+
+    int getfree ( ) {
+      for (int i = 0; i < CACHE_SIZE; i++) {
+        if (cache[i].page_no == 0) return i;
+      }
+      int idx = replace_idx;
+      replace_idx = (replace_idx + 1) % CACHE_SIZE;
+      return idx;
+    }
+
+    void flush (int a) {
+      if (cache[a].page_no != 0 and cache[a].is_dirty == true) {
+          s.clear();
+          s.seekp((cache[a].page_no - 1) * sizeof(NodePage) + sizeof(FileHeader));
+          s.write(reinterpret_cast<char *>(&cache[a].page), sizeof(NodePage));
+          cache[a].is_dirty = false;
+      }
+    }
+
     FileManager(const std::string &filename) {
       s.open(filename, std::ios::in | std::ios::out | std::ios::binary);
       if (!s.is_open()) {
@@ -38,29 +73,70 @@ public:
         s.open(filename, std::ios::in | std::ios::out | std::ios::binary);
       }
     }
+
     void ReadPage(uint32_t page_no, NodePage *buf) {
+      memset(buf, 0, sizeof(NodePage)); 
+      if (page_no == 0) return; 
+
+      int idx = getvalue(page_no);
+      if (idx != -1) { 
+        *buf = cache[idx].page;
+        return;
+      }
+      s.clear(); 
       s.seekg((page_no - 1) * sizeof(NodePage) + sizeof(FileHeader));
       s.read(reinterpret_cast<char *>(buf), sizeof(NodePage));
+      
+      int idx_free = getfree();
+      flush(idx_free); 
+      cache[idx_free].page_no = page_no;
+      cache[idx_free].is_dirty = false;
+      cache[idx_free].page = *buf;
     }
     void WritePage(uint32_t page_no, NodePage *buf) {
-      s.seekp((page_no - 1) * sizeof(NodePage) + sizeof(FileHeader));
-      s.write(reinterpret_cast<char *>(buf), sizeof(NodePage));
+      int idx = getvalue(page_no);
+      if (idx == -1) {
+        idx = getfree();
+        flush(idx);
+      }
+      cache[idx].page_no = page_no;
+      cache[idx].is_dirty = true; 
+      cache[idx].page = *buf;
     }
+
     uint32_t AllocPage(NodePage *buf) {
+      s.clear();
       s.seekp(0, std::ios::end);
-      uint32_t new_page = (s.tellp()) / sizeof(NodePage) + 1;
+      auto current_pos = s.tellp();
+      uint32_t new_page = (static_cast<long long>(current_pos) - sizeof(FileHeader)) / sizeof(NodePage) + 1;
       s.write(reinterpret_cast<char *>(buf), sizeof(NodePage));
+      int idx = getvalue(new_page);
+      if (idx == -1) idx = getfree();
+      flush(idx);
+      cache[idx].page_no = new_page;
+      cache[idx].is_dirty = false; 
+      cache[idx].page = *buf;
       return new_page;
     }
+
     void ReadHeader(FileHeader *buf) {
+      s.clear();
       s.seekg(0);
       s.read(reinterpret_cast<char *>(buf), sizeof(FileHeader));
     }
+
     void WriteHeader(FileHeader *buf) {
+      s.clear();
       s.seekp(0);
       s.write(reinterpret_cast<char *>(buf), sizeof(FileHeader));
     }
-    ~FileManager() { s.close(); }
+
+    ~FileManager() { 
+      for (int i = 0; i < CACHE_SIZE; i++) {
+        flush(i); 
+      }
+      s.close(); 
+    }
   };
   const std::string name = "data";
   FileManager fm;
@@ -483,6 +559,7 @@ public:
     }
   }
  void deletenode(KeyType &index, ValueType &value) {
+    if (root_page_ == 0) return;
     NodePage curnode;
     uint32_t x = root_page_;
     while (true) {
@@ -529,6 +606,8 @@ public:
   }
   sjtu::vector<ValueType> find(KeyType key) {
     sjtu::vector<ValueType> ans;
+    if (root_page_ == 0) return ans;
+    
     NodePage curnode;
     uint32_t x = root_page_;
     while (true) {
@@ -549,7 +628,7 @@ public:
         if (curnode.keys[i] == key)
           ans.push_back(curnode.values[i]);
       }
-      if (curnode.next == 0 or curnode.keys[curnode.key_num - 1] > key)
+      if (curnode.next == 0 || curnode.key_num == 0 || curnode.keys[curnode.key_num - 1] > key)
         return ans;
       fm.ReadPage(curnode.next, &curnode);
     }
