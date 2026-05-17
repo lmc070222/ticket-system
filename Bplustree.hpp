@@ -482,7 +482,7 @@ public:
       }
     }
   }
-  void deletenode(KeyType &index, ValueType &value) {
+ void deletenode(KeyType &index, ValueType &value) {
     NodePage curnode;
     uint32_t x = root_page_;
     while (true) {
@@ -498,20 +498,14 @@ public:
         x = curnode.children[i];
       }
     }
-    int k = curnode.key_num;
-    for (int i = 0; i < curnode.key_num; i++) {
-      if (curnode.keys[i] >= index) {
-        k = i;
-        break;
-      }
-    }
-    if (curnode.key_num == k)
-      return;
     while (true) {
-      if (curnode.keys[k] > index)
-        return;
-      if (curnode.keys[k] == index) {
-        if (curnode.values[k] == value) {
+      int k = 0;
+      for (; k < curnode.key_num; k++) {
+        if (curnode.keys[k] >= index) break;
+      }
+      while (k < curnode.key_num) {
+        if (curnode.keys[k] > index) return;
+        if (curnode.keys[k] == index && curnode.values[k] == value) {
           curnode.key_num--;
           for (int i = k; i < curnode.key_num; i++) {
             curnode.keys[i] = curnode.keys[i + 1];
@@ -523,12 +517,13 @@ public:
           }
           return;
         }
+        k++;
       }
-      k++;
-      if (k >= curnode.key_num) {
-        if (curnode.next != 0)
-          search(curnode.next, index, value);
-        return;
+      if (curnode.next != 0) {
+        x = curnode.next;
+        fm.ReadPage(x, &curnode);
+      } else {
+        return; 
       }
     }
   }
