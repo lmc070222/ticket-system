@@ -266,9 +266,9 @@ class trainmanager {
       return false;
     }
     if (flag == 1)
-      sort(valid_results, comparetime);
+      std::sort(valid_results.begin(), valid_results.end(), comparetime);
     if (flag == 2)
-      sort(valid_results, comparecost);
+      std::sort(valid_results.begin(), valid_results.end(), comparecost);
     std::cout << valid_results.size() << '\n';
     for (int i = 0; i < valid_results.size(); i++) {
       trainKey key(valid_results[i].first.trainID);
@@ -696,7 +696,7 @@ bool query_transfer(date d, char* from, char* to, int flag) {
     if (orders.size() == 0) {
       return true;
     }
-    sort(orders, [](const Order &a, const Order &b) {
+    std::sort(orders.begin(), orders.end(), [](const Order &a, const Order &b) {
       return a.timestamp > b.timestamp;
     });
 
@@ -737,7 +737,7 @@ bool query_transfer(date d, char* from, char* to, int flag) {
       std::cout << -1 << '\n';
       return false;
     }
-    sort(order, [](const Order &a, const Order &b) {
+    std::sort(order.begin(), order.end(), [](const Order &a, const Order &b) {
       return a.timestamp > b.timestamp;
     });
 
@@ -823,7 +823,7 @@ bool query_transfer(date d, char* from, char* to, int flag) {
       memcpy(key.trainID, target_order.trainID, 22);
       key.date_ = dep_date;
       auto waitlist_vec = waitlisttree.find_by_index(key);
-      sort(waitlist_vec, comparewaitlistinfo);
+      std::sort(waitlist_vec.begin(), waitlist_vec.end(), comparewaitlistinfo);
       for (int i = 0; i < waitlist_vec.size(); i++) {
         auto &wl_key = key;
         auto &wl_info = waitlist_vec[i];

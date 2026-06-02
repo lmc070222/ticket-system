@@ -46,14 +46,26 @@ public:
         auto it = logstack.find(cur_key);
         if (it == logstack.end() or (*it).second.privilege <= g) return false;
 
-        user user_(username, password, name, mailaddr, g);
+        user user_;
+        memset(&user_, 0, sizeof(user_));
+        strncpy(user_.username, username, 21);
+        strncpy(user_.password, password, 51);
+        strncpy(user_.name, name, 23);
+        strncpy(user_.mailadd, mailaddr, 31);
+        user_.privilege = g;
         usertree.Insert(targetkey, user_);
         return true;
     }
     bool add_user(const char* username, const char* password, const char* name, const char* mailaddr) {
         UsernameKey targetkey(username);
 
-        user user_(username, password, name, mailaddr, 10);
+        user user_;
+        memset(&user_, 0, sizeof(user_));
+        strncpy(user_.username, username, 21);
+        strncpy(user_.password, password, 51);
+        strncpy(user_.name, name, 23);
+        strncpy(user_.mailadd, mailaddr, 31);
+        user_.privilege = 10;
         usertree.Insert(targetkey, user_);
         return true;
     }

@@ -153,6 +153,20 @@ struct Train {
   char type;
   bool is_released;
   saledate sale_date;
+  
+  Train() = default;
+  
+  bool operator==(const Train &other) const {
+    if (station_num != other.station_num) return false;
+    if (seat_num != other.seat_num) return false;
+    if (type != other.type) return false;
+    if (is_released != other.is_released) return false;
+    if (memcmp(stations, other.stations, sizeof(stations)) != 0) return false;
+    if (memcmp(prices, other.prices, sizeof(prices)) != 0) return false;
+    if (memcmp(arrival_times, other.arrival_times, sizeof(arrival_times)) != 0) return false;
+    if (memcmp(leaving_times, other.leaving_times, sizeof(leaving_times)) != 0) return false;
+    return true;
+  }
 };
 struct SeatKey {
   char trainID[22];
@@ -177,6 +191,13 @@ struct SeatKey {
 struct SeatInfo {
   int seats[102];
   int waitlist_count; // 该天该车排队候补的人数
+  
+  SeatInfo() = default;
+  
+  bool operator==(const SeatInfo &other) const {
+    if (waitlist_count != other.waitlist_count) return false;
+    return memcmp(seats, other.seats, sizeof(seats)) == 0;
+  }
 };
 struct StationKey {
   char station_name[52];
@@ -197,6 +218,15 @@ struct StationInfo {
   int station_rank;
   int price_prefix; // 从始发站到该站的票价前缀和
   int time_prefix;  // 从始发站到该站的时间差
+  
+  StationInfo() = default;
+  
+  bool operator==(const StationInfo &other) const {
+    if (station_rank != other.station_rank) return false;
+    if (price_prefix != other.price_prefix) return false;
+    if (time_prefix != other.time_prefix) return false;
+    return memcmp(trainID, other.trainID, sizeof(trainID)) == 0;
+  }
 };
 struct WaitlistKey {
   char trainID[22];
@@ -226,5 +256,16 @@ struct WaitlistInfo {
   int to_rank;
   int num;
   int order_timestamp;
+  
+  WaitlistInfo() = default;
+  
+  bool operator==(const WaitlistInfo &other) const {
+    if (timestamp != other.timestamp) return false;
+    if (from_rank != other.from_rank) return false;
+    if (to_rank != other.to_rank) return false;
+    if (num != other.num) return false;
+    if (order_timestamp != other.order_timestamp) return false;
+    return memcmp(username, other.username, sizeof(username)) == 0;
+  }
 };
 #endif

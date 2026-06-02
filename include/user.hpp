@@ -8,29 +8,9 @@ struct user {
   char name[24];
   char mailadd[32];
   int privilege;
-  user() {
-    std::memset(username, 0, sizeof(username));
-    std::memset(password, 0, sizeof(password));
-    std::memset(name, 0, sizeof(name));
-    std::memset(mailadd, 0, sizeof(mailadd));
-    privilege = 0;
-  }
-  user(const char *username_, const char *password_, const char *name_,
-       const char *mailadd_, int privilege_) {
-    std::memset(username, 0, sizeof(username));
-    std::strncpy(username, username_, sizeof(username) - 1);
-
-    std::memset(password, 0, sizeof(password));
-    std::strncpy(password, password_, sizeof(password) - 1);
-
-    std::memset(name, 0, sizeof(name));
-    std::strncpy(name, name_, sizeof(name) - 1);
-
-    std::memset(mailadd, 0, sizeof(mailadd));
-    std::strncpy(mailadd, mailadd_, sizeof(mailadd) - 1);
-
-    this->privilege = privilege_;
-  }
+  
+  user() = default;
+  
   bool operator<(const user &other) const {
     return std::strcmp(username, other.username) < 0;
   }
@@ -73,5 +53,18 @@ struct Order {
   int price;
   int num;
   int timestamp;
+  
+  Order() = default;
+  
+  bool operator==(const Order &other) const {
+    if (status != other.status) return false;
+    if (price != other.price) return false;
+    if (num != other.num) return false;
+    if (timestamp != other.timestamp) return false;
+    if (memcmp(trainID, other.trainID, sizeof(trainID)) != 0) return false;
+    if (memcmp(from, other.from, sizeof(from)) != 0) return false;
+    if (memcmp(to, other.to, sizeof(to)) != 0) return false;
+    return true;
+  }
 };
 #endif

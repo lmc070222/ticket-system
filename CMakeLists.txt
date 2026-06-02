@@ -9,5 +9,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
 
 # 添加可执行文件，名字必须是 'code'
-# 假设你的入口文件是 main.cpp
-add_executable(code main.cpp)
+# 入口文件在 src/main.cpp
+add_executable(code src/main.cpp)

@@ -160,6 +160,38 @@ class vector {
         bool operator!=(const const_iterator &rhs) const {
             return !(*this == rhs);
         }
+        bool operator<(const iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr < rhs.ptr;
+        }
+        bool operator<(const const_iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr < rhs.ptr;
+        }
+        bool operator>(const iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr > rhs.ptr;
+        }
+        bool operator>(const const_iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr > rhs.ptr;
+        }
+        bool operator<=(const iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr <= rhs.ptr;
+        }
+        bool operator<=(const const_iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr <= rhs.ptr;
+        }
+        bool operator>=(const iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr >= rhs.ptr;
+        }
+        bool operator>=(const const_iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr >= rhs.ptr;
+        }
         long long site() {
             return this->ptr - this->owner->head;
         }
@@ -283,6 +315,38 @@ class vector {
         }
         bool operator!=(const const_iterator &rhs) const {
             return !(*this == rhs);
+        }
+        bool operator<(const iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr < rhs.ptr;
+        }
+        bool operator<(const const_iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr < rhs.ptr;
+        }
+        bool operator>(const iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr > rhs.ptr;
+        }
+        bool operator>(const const_iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr > rhs.ptr;
+        }
+        bool operator<=(const iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr <= rhs.ptr;
+        }
+        bool operator<=(const const_iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr <= rhs.ptr;
+        }
+        bool operator>=(const iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr >= rhs.ptr;
+        }
+        bool operator>=(const const_iterator &rhs) const {
+            if (owner != rhs.owner) throw invalid_iterator();
+            return ptr >= rhs.ptr;
         }
         long long site() const {
             return this->ptr - this->owner->head;
