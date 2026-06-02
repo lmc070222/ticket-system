@@ -83,17 +83,97 @@ CMakeFiles/code.dir/src/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/code.dir/src/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lmc123456/Ticket-System-2026/src/main.cpp -o CMakeFiles/code.dir/src/main.cpp.s
 
+CMakeFiles/code.dir/src/paser.cpp.o: CMakeFiles/code.dir/flags.make
+CMakeFiles/code.dir/src/paser.cpp.o: /home/lmc123456/Ticket-System-2026/src/paser.cpp
+CMakeFiles/code.dir/src/paser.cpp.o: CMakeFiles/code.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lmc123456/Ticket-System-2026/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/code.dir/src/paser.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/code.dir/src/paser.cpp.o -MF CMakeFiles/code.dir/src/paser.cpp.o.d -o CMakeFiles/code.dir/src/paser.cpp.o -c /home/lmc123456/Ticket-System-2026/src/paser.cpp
+
+CMakeFiles/code.dir/src/paser.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/code.dir/src/paser.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lmc123456/Ticket-System-2026/src/paser.cpp > CMakeFiles/code.dir/src/paser.cpp.i
+
+CMakeFiles/code.dir/src/paser.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/code.dir/src/paser.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lmc123456/Ticket-System-2026/src/paser.cpp -o CMakeFiles/code.dir/src/paser.cpp.s
+
+CMakeFiles/code.dir/src/train.cpp.o: CMakeFiles/code.dir/flags.make
+CMakeFiles/code.dir/src/train.cpp.o: /home/lmc123456/Ticket-System-2026/src/train.cpp
+CMakeFiles/code.dir/src/train.cpp.o: CMakeFiles/code.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lmc123456/Ticket-System-2026/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/code.dir/src/train.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/code.dir/src/train.cpp.o -MF CMakeFiles/code.dir/src/train.cpp.o.d -o CMakeFiles/code.dir/src/train.cpp.o -c /home/lmc123456/Ticket-System-2026/src/train.cpp
+
+CMakeFiles/code.dir/src/train.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/code.dir/src/train.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lmc123456/Ticket-System-2026/src/train.cpp > CMakeFiles/code.dir/src/train.cpp.i
+
+CMakeFiles/code.dir/src/train.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/code.dir/src/train.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lmc123456/Ticket-System-2026/src/train.cpp -o CMakeFiles/code.dir/src/train.cpp.s
+
+CMakeFiles/code.dir/src/trainmanager.cpp.o: CMakeFiles/code.dir/flags.make
+CMakeFiles/code.dir/src/trainmanager.cpp.o: /home/lmc123456/Ticket-System-2026/src/trainmanager.cpp
+CMakeFiles/code.dir/src/trainmanager.cpp.o: CMakeFiles/code.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lmc123456/Ticket-System-2026/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/code.dir/src/trainmanager.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/code.dir/src/trainmanager.cpp.o -MF CMakeFiles/code.dir/src/trainmanager.cpp.o.d -o CMakeFiles/code.dir/src/trainmanager.cpp.o -c /home/lmc123456/Ticket-System-2026/src/trainmanager.cpp
+
+CMakeFiles/code.dir/src/trainmanager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/code.dir/src/trainmanager.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lmc123456/Ticket-System-2026/src/trainmanager.cpp > CMakeFiles/code.dir/src/trainmanager.cpp.i
+
+CMakeFiles/code.dir/src/trainmanager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/code.dir/src/trainmanager.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lmc123456/Ticket-System-2026/src/trainmanager.cpp -o CMakeFiles/code.dir/src/trainmanager.cpp.s
+
+CMakeFiles/code.dir/src/user.cpp.o: CMakeFiles/code.dir/flags.make
+CMakeFiles/code.dir/src/user.cpp.o: /home/lmc123456/Ticket-System-2026/src/user.cpp
+CMakeFiles/code.dir/src/user.cpp.o: CMakeFiles/code.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lmc123456/Ticket-System-2026/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/code.dir/src/user.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/code.dir/src/user.cpp.o -MF CMakeFiles/code.dir/src/user.cpp.o.d -o CMakeFiles/code.dir/src/user.cpp.o -c /home/lmc123456/Ticket-System-2026/src/user.cpp
+
+CMakeFiles/code.dir/src/user.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/code.dir/src/user.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lmc123456/Ticket-System-2026/src/user.cpp > CMakeFiles/code.dir/src/user.cpp.i
+
+CMakeFiles/code.dir/src/user.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/code.dir/src/user.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lmc123456/Ticket-System-2026/src/user.cpp -o CMakeFiles/code.dir/src/user.cpp.s
+
+CMakeFiles/code.dir/src/usermanager.cpp.o: CMakeFiles/code.dir/flags.make
+CMakeFiles/code.dir/src/usermanager.cpp.o: /home/lmc123456/Ticket-System-2026/src/usermanager.cpp
+CMakeFiles/code.dir/src/usermanager.cpp.o: CMakeFiles/code.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/lmc123456/Ticket-System-2026/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/code.dir/src/usermanager.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/code.dir/src/usermanager.cpp.o -MF CMakeFiles/code.dir/src/usermanager.cpp.o.d -o CMakeFiles/code.dir/src/usermanager.cpp.o -c /home/lmc123456/Ticket-System-2026/src/usermanager.cpp
+
+CMakeFiles/code.dir/src/usermanager.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/code.dir/src/usermanager.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/lmc123456/Ticket-System-2026/src/usermanager.cpp > CMakeFiles/code.dir/src/usermanager.cpp.i
+
+CMakeFiles/code.dir/src/usermanager.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/code.dir/src/usermanager.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/lmc123456/Ticket-System-2026/src/usermanager.cpp -o CMakeFiles/code.dir/src/usermanager.cpp.s
+
 # Object files for target code
 code_OBJECTS = \
-"CMakeFiles/code.dir/src/main.cpp.o"
+"CMakeFiles/code.dir/src/main.cpp.o" \
+"CMakeFiles/code.dir/src/paser.cpp.o" \
+"CMakeFiles/code.dir/src/train.cpp.o" \
+"CMakeFiles/code.dir/src/trainmanager.cpp.o" \
+"CMakeFiles/code.dir/src/user.cpp.o" \
+"CMakeFiles/code.dir/src/usermanager.cpp.o"
 
 # External object files for target code
 code_EXTERNAL_OBJECTS =
 
 code: CMakeFiles/code.dir/src/main.cpp.o
+code: CMakeFiles/code.dir/src/paser.cpp.o
+code: CMakeFiles/code.dir/src/train.cpp.o
+code: CMakeFiles/code.dir/src/trainmanager.cpp.o
+code: CMakeFiles/code.dir/src/user.cpp.o
+code: CMakeFiles/code.dir/src/usermanager.cpp.o
 code: CMakeFiles/code.dir/build.make
 code: CMakeFiles/code.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/lmc123456/Ticket-System-2026/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable code"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/lmc123456/Ticket-System-2026/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable code"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/code.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

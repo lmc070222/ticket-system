@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = 
+CXX_INCLUDES = -I/home/lmc123456/Ticket-System-2026/include
 
-CXX_FLAGS =  -O2 -std=gnu++17
+CXX_FLAGS =  -O2 -Wall -Wextra -std=gnu++17
 

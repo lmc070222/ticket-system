@@ -153,6 +153,126 @@ src/main.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/main.cpp.s
 .PHONY : src/main.cpp.s
 
+src/paser.o: src/paser.cpp.o
+.PHONY : src/paser.o
+
+# target to build an object file
+src/paser.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/paser.cpp.o
+.PHONY : src/paser.cpp.o
+
+src/paser.i: src/paser.cpp.i
+.PHONY : src/paser.i
+
+# target to preprocess a source file
+src/paser.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/paser.cpp.i
+.PHONY : src/paser.cpp.i
+
+src/paser.s: src/paser.cpp.s
+.PHONY : src/paser.s
+
+# target to generate assembly for a file
+src/paser.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/paser.cpp.s
+.PHONY : src/paser.cpp.s
+
+src/train.o: src/train.cpp.o
+.PHONY : src/train.o
+
+# target to build an object file
+src/train.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/train.cpp.o
+.PHONY : src/train.cpp.o
+
+src/train.i: src/train.cpp.i
+.PHONY : src/train.i
+
+# target to preprocess a source file
+src/train.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/train.cpp.i
+.PHONY : src/train.cpp.i
+
+src/train.s: src/train.cpp.s
+.PHONY : src/train.s
+
+# target to generate assembly for a file
+src/train.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/train.cpp.s
+.PHONY : src/train.cpp.s
+
+src/trainmanager.o: src/trainmanager.cpp.o
+.PHONY : src/trainmanager.o
+
+# target to build an object file
+src/trainmanager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/trainmanager.cpp.o
+.PHONY : src/trainmanager.cpp.o
+
+src/trainmanager.i: src/trainmanager.cpp.i
+.PHONY : src/trainmanager.i
+
+# target to preprocess a source file
+src/trainmanager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/trainmanager.cpp.i
+.PHONY : src/trainmanager.cpp.i
+
+src/trainmanager.s: src/trainmanager.cpp.s
+.PHONY : src/trainmanager.s
+
+# target to generate assembly for a file
+src/trainmanager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/trainmanager.cpp.s
+.PHONY : src/trainmanager.cpp.s
+
+src/user.o: src/user.cpp.o
+.PHONY : src/user.o
+
+# target to build an object file
+src/user.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/user.cpp.o
+.PHONY : src/user.cpp.o
+
+src/user.i: src/user.cpp.i
+.PHONY : src/user.i
+
+# target to preprocess a source file
+src/user.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/user.cpp.i
+.PHONY : src/user.cpp.i
+
+src/user.s: src/user.cpp.s
+.PHONY : src/user.s
+
+# target to generate assembly for a file
+src/user.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/user.cpp.s
+.PHONY : src/user.cpp.s
+
+src/usermanager.o: src/usermanager.cpp.o
+.PHONY : src/usermanager.o
+
+# target to build an object file
+src/usermanager.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/usermanager.cpp.o
+.PHONY : src/usermanager.cpp.o
+
+src/usermanager.i: src/usermanager.cpp.i
+.PHONY : src/usermanager.i
+
+# target to preprocess a source file
+src/usermanager.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/usermanager.cpp.i
+.PHONY : src/usermanager.cpp.i
+
+src/usermanager.s: src/usermanager.cpp.s
+.PHONY : src/usermanager.s
+
+# target to generate assembly for a file
+src/usermanager.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/code.dir/build.make CMakeFiles/code.dir/src/usermanager.cpp.s
+.PHONY : src/usermanager.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -165,6 +285,21 @@ help:
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
+	@echo "... src/paser.o"
+	@echo "... src/paser.i"
+	@echo "... src/paser.s"
+	@echo "... src/train.o"
+	@echo "... src/train.i"
+	@echo "... src/train.s"
+	@echo "... src/trainmanager.o"
+	@echo "... src/trainmanager.i"
+	@echo "... src/trainmanager.s"
+	@echo "... src/user.o"
+	@echo "... src/user.i"
+	@echo "... src/user.s"
+	@echo "... src/usermanager.o"
+	@echo "... src/usermanager.i"
+	@echo "... src/usermanager.s"
 .PHONY : help
 
 

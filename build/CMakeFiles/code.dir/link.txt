@@ -1,1 +1,1 @@
-/usr/bin/c++  -O2 CMakeFiles/code.dir/src/main.cpp.o -o code 
+/usr/bin/c++  -O2 -Wall -Wextra CMakeFiles/code.dir/src/main.cpp.o CMakeFiles/code.dir/src/paser.cpp.o CMakeFiles/code.dir/src/train.cpp.o CMakeFiles/code.dir/src/trainmanager.cpp.o CMakeFiles/code.dir/src/user.cpp.o CMakeFiles/code.dir/src/usermanager.cpp.o -o code 

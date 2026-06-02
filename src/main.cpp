@@ -1,4 +1,4 @@
-#include "/home/lmc123456/Ticket-System-2026/include/paser.hpp" 
+#include "/include/paser.hpp" 
 #include <iostream>
 
 int main() {
