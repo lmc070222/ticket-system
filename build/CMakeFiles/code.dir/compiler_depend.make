@@ -271,6 +271,27 @@ CMakeFiles/code.dir/src/main.cpp.o: /home/lmc123456/Ticket-System-2026/src/main.
   /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h \
   /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h
 
+CMakeFiles/code.dir/src/paser.cpp.o: /home/lmc123456/Ticket-System-2026/src/paser.cpp \
+  /usr/include/stdc-predef.h
+
+CMakeFiles/code.dir/src/train.cpp.o: /home/lmc123456/Ticket-System-2026/src/train.cpp \
+  /usr/include/stdc-predef.h
+
+CMakeFiles/code.dir/src/trainmanager.cpp.o: /home/lmc123456/Ticket-System-2026/src/trainmanager.cpp \
+  /usr/include/stdc-predef.h
+
+CMakeFiles/code.dir/src/user.cpp.o: /home/lmc123456/Ticket-System-2026/src/user.cpp \
+  /usr/include/stdc-predef.h
+
+CMakeFiles/code.dir/src/usermanager.cpp.o: /home/lmc123456/Ticket-System-2026/src/usermanager.cpp \
+  /usr/include/stdc-predef.h
+
+
+/home/lmc123456/Ticket-System-2026/src/user.cpp:
+
+/home/lmc123456/Ticket-System-2026/src/trainmanager.cpp:
+
+/home/lmc123456/Ticket-System-2026/src/paser.cpp:
 
 /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h:
 
@@ -473,6 +494,8 @@ CMakeFiles/code.dir/src/main.cpp.o: /home/lmc123456/Ticket-System-2026/src/main.
 /usr/include/c++/13/system_error:
 
 /usr/include/c++/13/compare:
+
+/home/lmc123456/Ticket-System-2026/src/train.cpp:
 
 /usr/include/asm-generic/errno.h:
 
@@ -795,6 +818,8 @@ CMakeFiles/code.dir/src/main.cpp.o: /home/lmc123456/Ticket-System-2026/src/main.
 /usr/include/x86_64-linux-gnu/bits/waitstatus.h:
 
 /usr/include/x86_64-linux-gnu/bits/xopen_lim.h:
+
+/home/lmc123456/Ticket-System-2026/src/usermanager.cpp:
 
 /usr/include/x86_64-linux-gnu/bits/wordsize.h:
 
