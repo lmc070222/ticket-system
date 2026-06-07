@@ -691,5 +691,28 @@ public:
     }
   }
 };
-
+template <typename T>
+void my_swap(T& a, T& b) {
+    T temp = a;
+    a = b;
+    b = temp;
+}
+template<typename RandomIt, typename Compare>
+void my_sort(RandomIt first, RandomIt last, Compare comp) {
+    if (last - first <= 1) return;
+    RandomIt left = first;
+    RandomIt right = last - 1;
+    auto pivot = *(first + (last - first) / 2);
+    while (left <= right) {
+        while (comp(*left, pivot)) left++;
+        while (comp(pivot, *right)) right--; 
+        if (left <= right) {
+            my_swap(*left, *right);
+            left++;
+            right--;
+        }
+    }
+    if (first < right + 1) my_sort(first, right + 1, comp);
+    if (left < last) my_sort(left, last, comp);
+}
 #endif

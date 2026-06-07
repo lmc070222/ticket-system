@@ -310,12 +310,12 @@ class trainmanager {
       return true;
     }
     if (flag == 1) {
-      std::sort(valid_results.begin(), valid_results.end(), [](const TicketResult &a, const TicketResult &b) {
+        my_sort(valid_results.begin(), valid_results.end(), [](const TicketResult &a, const TicketResult &b) {
         if (a.time != b.time) return a.time < b.time;
         return std::strcmp(a.trainID, b.trainID) < 0;
       });
     } else if (flag == 2) {
-      std::sort(valid_results.begin(), valid_results.end(), [](const TicketResult &a, const TicketResult &b) {
+      my_sort(valid_results.begin(), valid_results.end(), [](const TicketResult &a, const TicketResult &b) {
         if (a.cost != b.cost) return a.cost < b.cost;
         return std::strcmp(a.trainID, b.trainID) < 0;
       });
@@ -761,7 +761,7 @@ std::strcpy(searchkey.username, username);
     if (orders.size() == 0) {
       return true;
     }
-    std::sort(orders.begin(), orders.end(), [](const Order &a, const Order &b) {
+    my_sort(orders.begin(), orders.end(), [](const Order &a, const Order &b) {
       return a.timestamp > b.timestamp;
     });
 
@@ -803,7 +803,7 @@ std::strcpy(searchkey.username, username);
         return false;
     }
     
-    std::sort(order.begin(), order.end(), [](const Order &a, const Order &b) {
+    my_sort(order.begin(), order.end(), [](const Order &a, const Order &b) {
         return a.timestamp > b.timestamp;
     });
 
@@ -897,7 +897,7 @@ std::strcpy(searchkey.username, username);
         key.date_ = dep_date;
         
         auto waitlist_vec = waitlisttree.find_by_index(key);
-        std::sort(waitlist_vec.begin(), waitlist_vec.end(), comparewaitlistinfo);
+        my_sort(waitlist_vec.begin(), waitlist_vec.end(), comparewaitlistinfo);
         for (int i = 0; i < waitlist_vec.size(); i++) {
             auto &wl_key = key;
             auto &wl_info = waitlist_vec[i];
