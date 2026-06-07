@@ -9,7 +9,7 @@ int main() {
   cin >> n;
   char a[65];
   int value;
-  Bplustree<IndexValueKey, int, 50> tree;
+  Bplustree<IndexValueKey, int, 50> tree("data");
   string order;
   while (n--) {
     cin >> order;

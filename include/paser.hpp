@@ -3,6 +3,7 @@
 
 #include "src/vector.hpp"
 #include "trainmanager.hpp"
+#include "user.hpp"
 #include "usermanger.hpp"
 #include <cstring>
 #include <iostream>
@@ -162,7 +163,17 @@ public:
       char username[22];
       strcpy(cur_username, current_cmd.args['c'].c_str());
       strcpy(username, current_cmd.args['u'].c_str());
-      user tmp = usersystem.usertree.find_by_index(UsernameKey(username)).back();
+      sjtu::vector<user> tmp_v = usersystem.usertree.find_by_index(UsernameKey(username));
+      sjtu::vector<user> tmp_cur = usersystem.usertree.find_by_index(UsernameKey(cur_username));
+      user tmp;
+      if (tmp_v.size() == 0 or tmp_cur.size() == 0) {
+        std::cout << '[' << current_cmd.timestamp << ']' << ' ';
+        std::cout << -1 << '\n';
+        current_cmd.clear();
+        return ;
+      } 
+      user cur = tmp_cur.back();
+      tmp = tmp_v.back();
       if (current_cmd.has_arg('p')) {
         strcpy(tmp.password, current_cmd.args['p'].c_str());
       }
@@ -170,10 +181,17 @@ public:
         strcpy(tmp.name, current_cmd.args['n'].c_str());
       }
       if (current_cmd.has_arg('m')) {
+        if (current_cmd.timestamp == 236892) std::cout << "wrong" ;
         strcpy(tmp.mailadd, current_cmd.args['m'].c_str());
       }
       if (current_cmd.has_arg('g')) {
         tmp.privilege = change_string_to_int(current_cmd.args['g']);
+        if (cur.privilege <= tmp.privilege) {
+          std::cout << '[' << current_cmd.timestamp << ']' << ' ';
+          std::cout << -1 << '\n';
+          current_cmd.clear();
+          return ;
+        }
       }
       bool x = usersystem.modify_profile(cur_username, username, tmp);
       std::cout << '[' << current_cmd.timestamp << ']' << ' ';
@@ -258,6 +276,12 @@ public:
       std::cout << '[' << current_cmd.timestamp << ']' << ' ';
       bool flag = trainsystem.query_train(date_, trainid);
       if (!flag) std::cout << -1 << '\n';
+    }
+    else if (current_cmd.cmd_name == "query_order") {
+      char user[22];
+      strcpy (user,current_cmd.args['u'].c_str()) ;
+      std::cout << '[' << current_cmd.timestamp << ']' << ' ';
+      trainsystem.query_order(user, usersystem) ;
     }
     else if (current_cmd.cmd_name == "query_ticket") {
       date date_;

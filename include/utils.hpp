@@ -81,7 +81,6 @@ public:
     KeyType keys[M + 2];
     uint32_t parent;
     
-    // Storage for values or children - use char buffer with careful offset calculation
     static const size_t ELEM_SIZE = (sizeof(ValueType) > sizeof(uint32_t)) ? sizeof(ValueType) : sizeof(uint32_t);
     char values_or_children_data[ELEM_SIZE * (M + 2)];
     
@@ -562,14 +561,15 @@ public:
       if (parentnode.get_child(i) == afterno)
         afterk = i;
     }
-    for (int i = afterk - 1; i >= curk; i--) {
-      parentnode.keys[i + 1] = parentnode.keys[i];
+    for (int i = curk; i < parentnode.key_num - 1; i++) {
+      parentnode.keys[i] = parentnode.keys[i + 1];
     }
-    for (int i = afterk; i <= parentnode.key_num; i++) {
+    for (int i = afterk; i < parentnode.key_num; i++) {
       parentnode.set_child(i, parentnode.get_child(i + 1));
     }
     parentnode.key_num--;
     fm.WritePage(curnode.parent, &parentnode);
+    
     if (parentnode.key_num >= M / 2)
       return;
     if (parentnode.parent == 0) {
@@ -619,6 +619,7 @@ public:
           fm.WritePage(cur_page, &curnode);
           if (curnode.key_num >= M / 2 || curnode.parent == 0)
             return;
+            
           uint32_t parentpage = curnode.parent;
           NodePage parentnode;
           fm.ReadPage(parentpage, &parentnode);
@@ -638,31 +639,36 @@ public:
                 curnode.keys[i + 1] = curnode.keys[i];
                 curnode.set_value(i + 1, curnode.get_value(i));
               }
-              curnode.keys[0] = parentnode.keys[curk - 1];
+              curnode.keys[0] = leftsibling.keys[leftsibling.key_num - 1];
               curnode.set_value(0, leftsibling.get_value(leftsibling.key_num - 1));
               curnode.key_num++;
-              parentnode.keys[curk - 1] = leftsibling.keys[leftsibling.key_num - 1];
               leftsibling.key_num--;
+              parentnode.keys[curk - 1] = leftsibling.keys[leftsibling.key_num - 1];
+              
               fm.WritePage(cur_page, &curnode);
               fm.WritePage(leftpage, &leftsibling);
               fm.WritePage(parentpage, &parentnode);
               return;
             }
           }
+          
+          // 向右借位
           if (curk < parentnode.key_num) {
             NodePage rightsibling;
             uint32_t rightpage = parentnode.get_child(curk + 1);
             fm.ReadPage(rightpage, &rightsibling);
             if (rightsibling.key_num > M / 2) {
-              curnode.keys[curnode.key_num] = parentnode.keys[curk];
+              curnode.keys[curnode.key_num] = rightsibling.keys[0];
               curnode.set_value(curnode.key_num, rightsibling.get_value(0));
               curnode.key_num++;
-              parentnode.keys[curk] = rightsibling.keys[0];
+              
               for (int i = 0; i < rightsibling.key_num - 1; i++) {
                 rightsibling.keys[i] = rightsibling.keys[i + 1];
                 rightsibling.set_value(i, rightsibling.get_value(i + 1));
               }
               rightsibling.key_num--;
+              parentnode.keys[curk] = curnode.keys[curnode.key_num - 1];
+              
               fm.WritePage(cur_page, &curnode);
               fm.WritePage(rightpage, &rightsibling);
               fm.WritePage(parentpage, &parentnode);

@@ -93,7 +93,8 @@ class trainmanager {
     target.is_released = true;
     traintree.Insert(x, target);
     SeatKey sk;
-    memcpy(sk.trainID, trainid, 22);
+    memset(sk.trainID, 0, 22);
+    strcpy (sk.trainID , trainid );
     SeatInfo si;
     for (int i = 0; i < 102; i++)
       si.seats[i] = target.seat_num;
@@ -105,12 +106,14 @@ class trainmanager {
     }
     StationKey stationkey;
     StationInfo stationinfo;
-    memcpy(stationinfo.trainID, trainid, 22);
+    memset (stationinfo.trainID,0,22);
+    strcpy(stationinfo.trainID, trainid);
     stationinfo.station_rank = 0;
     stationinfo.price_prefix = 0;
     stationinfo.time_prefix = 0;
     for (int i = 1; i <= target.station_num; i++) {
-      memcpy(stationkey.station_name, target.stations[i], 52);
+      memset (stationkey.station_name ,0,52);
+      strcpy(stationkey.station_name, target.stations[i]);
       stationinfo.station_rank++;
       stationinfo.price_prefix += target.prices[i - 1];
       stationinfo.time_prefix = target.arrival_times[i];
@@ -122,7 +125,8 @@ class trainmanager {
     trainKey x(trainid);
     SeatKey y;
     y.startdate = date_;
-    memcpy(y.trainID, trainid, 22);
+    memset (y.trainID,0,22);
+    strcpy(y.trainID, trainid);
     sjtu::vector<Train> trai = traintree.find_by_index(x);
     if (trai.size() == 0)
       return false;
@@ -149,8 +153,8 @@ class trainmanager {
       daytime tmp_arrival = tr.starttimes + tr.arrival_times[tr.station_num];
       struct date d_arrival = date_ + tmp_arrival.day;
       std::cout << tr.stations[tr.station_num] << ' ' << d_arrival << ' '
-                << tmp_arrival << " -> " << "xx-xx xx:xx" << totalprice << ' '
-                << tr.seat_num << '\n';
+                << tmp_arrival << " -> " << "xx-xx xx:xx " << totalprice << ' '
+                << 'x' << '\n';
       return true;
     }
     sjtu::vector<SeatInfo> sea = seattree.find_by_index(y);
@@ -225,18 +229,37 @@ class trainmanager {
     bool rule_other = memcmp(x.first.trainID, y.first.trainID, 22) < 0;
     return cost_x < cost_y or (cost_x == cost_y and rule_other);
   }
+  struct TicketResult {
+    char trainID[22];
+    int time;            
+    int cost;            
+    int from_rank;
+    int to_rank;
+    date dep_date;       
+    daytime leaving_time;
+    date leaving_date;  
+    daytime arrival_time;
+    date arrival_date;   
+    int seat_num; 
+  };
+
   bool query_ticket(date d, char *from, char *to, int flag) {
     StationKey x;
-    std::memcpy(x.station_name, from, 52);
+    std::memset(&x, 0, sizeof(StationKey));
+    std::strcpy(x.station_name, from);
     sjtu::vector<StationInfo> sta1 = stationtree.find_by_index(x);
+    
     StationKey y;
-    std::memcpy(y.station_name, to, 52);
+    std::memset(&y, 0, sizeof(StationKey));
+    std::strcpy(y.station_name, to);
     sjtu::vector<StationInfo> sta2 = stationtree.find_by_index(y);
+    
     sort_stations(sta1);
     sort_stations(sta2);
-    sjtu::vector<std::pair<StationInfo, StationInfo>> valid_results;
-    sjtu::vector<date> derived_dep_dates;
+    
+    sjtu::vector<TicketResult> valid_results;
     int p1 = 0, p2 = 0;
+    
     while (p1 < sta1.size() && p2 < sta2.size()) {
       int cmp = std::strcmp(sta1[p1].trainID, sta2[p2].trainID);
       if (cmp < 0) {
@@ -246,15 +269,34 @@ class trainmanager {
       } else {
         if (sta1[p1].station_rank < sta2[p2].station_rank) {
           trainKey key(sta1[p1].trainID);
-          Train train = (traintree.find_by_index(key)).back();
-          if (train.is_released) {
-            daytime tmp_leaving_offset =
-                train.starttimes + train.leaving_times[sta1[p1].station_rank];
-            date dep_date = d - tmp_leaving_offset.day;
-            if (train.sale_date.startdate <= dep_date &&
-                dep_date <= train.sale_date.enddate) {
-              valid_results.push_back({sta1[p1], sta2[p2]});
-              derived_dep_dates.push_back(dep_date);
+          sjtu::vector<Train> tv = traintree.find_by_index(key);
+          if (!tv.empty()) {
+            Train train = tv.back();
+            if (train.is_released) {
+              daytime tmp_leaving_offset = train.starttimes + train.leaving_times[sta1[p1].station_rank];
+              date dep_date = d - tmp_leaving_offset.day;
+              
+              if (train.sale_date.startdate <= dep_date && dep_date <= train.sale_date.enddate) {
+                TicketResult res;
+                std::memset(&res, 0, sizeof(TicketResult)); 
+                std::strcpy(res.trainID, sta1[p1].trainID);
+                res.time = train.arrival_times[sta2[p2].station_rank] - train.leaving_times[sta1[p1].station_rank];
+                res.cost = sta2[p2].price_prefix - sta1[p1].price_prefix;
+                
+                res.from_rank = sta1[p1].station_rank;
+                res.to_rank = sta2[p2].station_rank;
+                res.dep_date = dep_date;
+                
+                res.leaving_time = tmp_leaving_offset;
+                res.leaving_date = d; 
+                
+                daytime arr_offset = train.starttimes + train.arrival_times[sta2[p2].station_rank];
+                res.arrival_time = arr_offset;
+                res.arrival_date = dep_date + arr_offset.day;
+                res.seat_num = train.seat_num;
+                
+                valid_results.push_back(res);
+              }
             }
           }
         }
@@ -262,44 +304,48 @@ class trainmanager {
         p2++;
       }
     }
+    
     if (valid_results.size() == 0) {
-      return false;
+      std::cout << 0 << '\n';
+      return true;
     }
-    if (flag == 1)
-      std::sort(valid_results.begin(), valid_results.end(), comparetime);
-    if (flag == 2)
-      std::sort(valid_results.begin(), valid_results.end(), comparecost);
+    if (flag == 1) {
+      std::sort(valid_results.begin(), valid_results.end(), [](const TicketResult &a, const TicketResult &b) {
+        if (a.time != b.time) return a.time < b.time;
+        return std::strcmp(a.trainID, b.trainID) < 0;
+      });
+    } else if (flag == 2) {
+      std::sort(valid_results.begin(), valid_results.end(), [](const TicketResult &a, const TicketResult &b) {
+        if (a.cost != b.cost) return a.cost < b.cost;
+        return std::strcmp(a.trainID, b.trainID) < 0;
+      });
+    }
+    
     std::cout << valid_results.size() << '\n';
+    
     for (int i = 0; i < valid_results.size(); i++) {
-      trainKey key(valid_results[i].first.trainID);
-      Train train = (traintree.find_by_index(key)).back();
-      daytime tmp_daytime_leaving =
-          train.starttimes +
-          train.leaving_times[valid_results[i].first.station_rank];
-      daytime tmp_daytime_arrival =
-          train.starttimes +
-          train.arrival_times[valid_results[i].second.station_rank];
-      date date_tmp_leaving = derived_dep_dates[i] + tmp_daytime_leaving.day;
-      date date_tmp_arrival = derived_dep_dates[i] + tmp_daytime_arrival.day;
-      int price_tmp = valid_results[i].second.price_prefix -
-                      valid_results[i].first.price_prefix;
       SeatKey seatkey;
-      seatkey.startdate = derived_dep_dates[i];
-      std::memcpy(seatkey.trainID, valid_results[i].first.trainID, 22);
-      sjtu::vector<SeatInfo> seatinfo = seattree.find_by_index(seatkey);
-      int remain_num = train.seat_num;
-      for (int j = valid_results[i].first.station_rank;
-           j < valid_results[i].second.station_rank; j++) {
-        if (seatinfo.back().seats[j] < remain_num) {
-          remain_num = seatinfo.back().seats[j];
+      std::memset(&seatkey, 0, sizeof(SeatKey));
+      seatkey.startdate = valid_results[i].dep_date;
+      std::strcpy(seatkey.trainID, valid_results[i].trainID);
+      
+      sjtu::vector<SeatInfo> sea = seattree.find_by_index(seatkey);
+      int remain_num = valid_results[i].seat_num;
+      
+      if (!sea.empty()) {
+        SeatInfo seatinfo = sea.back();
+        for (int j = valid_results[i].from_rank; j < valid_results[i].to_rank; j++) {
+          if (seatinfo.seats[j] < remain_num) {
+            remain_num = seatinfo.seats[j];
+          }
         }
       }
-      std::cout << valid_results[i].first.trainID << ' ' << from << ' '
-                << date_tmp_leaving << ' ' << tmp_daytime_leaving << " -> "
-                << to << ' ' << date_tmp_arrival << ' ' << tmp_daytime_arrival
-                << ' ' << price_tmp << ' ' << remain_num << '\n';
+      std::cout << valid_results[i].trainID << ' ' << from << ' '
+                << valid_results[i].leaving_date << ' ' << valid_results[i].leaving_time << " -> "
+                << to << ' ' << valid_results[i].arrival_date << ' ' << valid_results[i].arrival_time
+                << ' ' << valid_results[i].cost << ' ' << remain_num << '\n';
     }
-
+    
     return true;
   }
   struct TransferResult {
@@ -336,11 +382,13 @@ class trainmanager {
 
 bool query_transfer(date d, char* from, char* to, int flag) {
     StationKey x;
-    std::memcpy(x.station_name, from, 52);
+    memset (x.station_name,0,52);
+    std::strcpy(x.station_name, from);
     sjtu::vector<StationInfo> sta1 = stationtree.find_by_index(x);
     
     StationKey y;
-    std::memcpy(y.station_name, to, 52);
+    memset (y.station_name,0,52);
+    std::strcpy(y.station_name, to);
     sjtu::vector<StationInfo> sta2 = stationtree.find_by_index(y);
 
     struct CandA {
@@ -360,7 +408,8 @@ bool query_transfer(date d, char* from, char* to, int flag) {
         
         if (dep_date_A >= tA.sale_date.startdate && dep_date_A <= tA.sale_date.enddate) {
             CandA ca;
-            std::memcpy(ca.trainID, sta1[i].trainID, 22);
+            memset (ca.trainID,0,22);
+            std::strcpy(ca.trainID, sta1[i].trainID);
             ca.train = tA;
             ca.rank = sta1[i].station_rank;
             ca.dep_date = dep_date_A;
@@ -379,7 +428,8 @@ bool query_transfer(date d, char* from, char* to, int flag) {
         Train tB = traintree.find_by_index(trainKey(sta2[i].trainID)).back();
         if (tB.is_released) {
             CandB cb;
-            std::memcpy(cb.trainID, sta2[i].trainID, 22);
+            memset (cb.trainID,0,22);
+            std::strcpy(cb.trainID, sta2[i].trainID);
             cb.train = tB;
             cb.rank = sta2[i].station_rank;
             valid_B.push_back(cb);
@@ -406,7 +456,7 @@ bool query_transfer(date d, char* from, char* to, int flag) {
                 int sB = 1;
                 
                 for (; sB < rankB_to; sB++) {
-                    if (std::memcmp(tA.stations[sA], tB.stations[sB], 52) == 0) {
+                    if (std::strcmp(tA.stations[sA], tB.stations[sB]) == 0) {
                         found_transfer = true;
                         break;
                     }
@@ -527,7 +577,8 @@ bool query_transfer(date d, char* from, char* to, int flag) {
     int remain_B = best_plan.seatNumB;
     
     SeatKey seatkeyA;
-    std::memcpy(seatkeyA.trainID, best_plan.train1, 22);
+    memset (seatkeyA.trainID,0,22);
+    std::strcpy(seatkeyA.trainID, best_plan.train1);
     seatkeyA.startdate = best_plan.dep_date_A_origin;
     sjtu::vector<SeatInfo> seaA = seattree.find_by_index(seatkeyA);
     if (seaA.size() > 0) {
@@ -539,7 +590,8 @@ bool query_transfer(date d, char* from, char* to, int flag) {
     }
 
     SeatKey seatkeyB;
-    std::memcpy(seatkeyB.trainID, best_plan.train2, 22);
+    memset (seatkeyB.trainID,0,22);
+    std::strcpy(seatkeyB.trainID, best_plan.train2);
     seatkeyB.startdate = best_plan.dep_date_B_origin;
     sjtu::vector<SeatInfo> seaB = seattree.find_by_index(seatkeyB);
     if (seaB.size() > 0) {
@@ -558,128 +610,141 @@ bool query_transfer(date d, char* from, char* to, int flag) {
     return true;
 }
 
-  bool buyticket(int timestamp, char *username, char *trainid, date date_,
-                 int number, char *from, char *to, bool flag,
-                 usermanager &usersystem) {
+ bool buyticket(int timestamp, char *username, char *trainid, date date_,
+               int number, char *from, char *to, bool flag,
+               usermanager &usersystem) {
     auto it = usersystem.logstack.find(UsernameKey(username));
-    sjtu::vector<user> u =
-        usersystem.usertree.find_by_index(UsernameKey(username));
-    if (u.size() == 0 or it == usersystem.logstack.end()) {
-      std::cout << -1 << '\n';
-      return false;
+    sjtu::vector<user> u = usersystem.usertree.find_by_index(UsernameKey(username));
+    if (u.size() == 0 || it == usersystem.logstack.end()) {
+        std::cout << -1 << '\n';
+        return false;
     }
     trainKey trainidkey = trainKey(trainid);
     sjtu::vector<Train> train_v = traintree.find_by_index(trainidkey);
     if (train_v.size() == 0) {
-      std::cout << -1 << '\n';
-      return false;
+        std::cout << -1 << '\n';
+        return false;
     }
     Train train = train_v.back();
     if (train.is_released == false) {
-      std::cout << -1 << '\n';
-      return false;
+        std::cout << -1 << '\n';
+        return false;
     }
     int p1 = 0, p2 = 0;
     for (int i = 1; i <= train.station_num; i++) {
-      if (memcmp(train.stations[i], from, 52) == 0)
-        p1 = i;
-      if (memcmp(train.stations[i], to, 52) == 0)
-        p2 = i;
+        if (std::string(train.stations[i]) == std::string(from)) 
+            p1 = i;
+        if (std::string(train.stations[i]) == std::string(to)) 
+            p2 = i;
     }
-    if (p1 == 0 or p2 == 0 or p1 >= p2) {
-      std::cout << -1 << '\n';
-      return false;
+    if (p1 == 0 || p2 == 0 || p1 >= p2) {
+        std::cout << -1 << '\n';
+        return false;
+    }
+    if (train.seat_num < number) {
+        std::cout << -1 << '\n';
+        return false;
     }
     daytime daytime_ = train.starttimes;
     daytime calculate_daytime = train.starttimes + train.leaving_times[p1];
     date dep_date = date_ - calculate_daytime.day;
-    if (!(dep_date <= train.sale_date.enddate and
-          dep_date >= train.sale_date.startdate)) {
-            std::cout << -1 << '\n';
-      return false;
-          }
+    if (!(dep_date <= train.sale_date.enddate && dep_date >= train.sale_date.startdate)) {
+        std::cout << -1 << '\n';
+        return false;
+    }
     SeatKey seatkey;
+    std::memset(&seatkey, 0, sizeof(SeatKey));
     seatkey.startdate = dep_date;
-    memcpy(seatkey.trainID, trainid, 22);
+    std::strcpy(seatkey.trainID, trainid);
+
     sjtu::vector<SeatInfo> sea = seattree.find_by_index(seatkey);
     if (sea.size() == 0) {
-      std::cout << -1 << '\n';
-      return false;
+        std::cout << -1 << '\n';
+        return false;
     }
     SeatInfo seatinfo = sea.back();
     int min_seat = train.seat_num;
     for (int i = p1; i < p2; i++) {
-      min_seat = (min_seat < seatinfo.seats[i]) ? min_seat : seatinfo.seats[i];
+        min_seat = (min_seat < seatinfo.seats[i]) ? min_seat : seatinfo.seats[i];
     }
     int price = 0;
     for (int i = p1; i < p2; i++) {
-      price += train.prices[i];
+        price += train.prices[i];
     }
     long long totalcost = 1ll * price * number;
     if (min_seat >= number) {
-      seattree.deletenode(seatkey, seatinfo);
-      for (int i = p1; i < p2; i++) {
-        seatinfo.seats[i] -= number;
-      }
-      seattree.Insert(seatkey, seatinfo);
-      OrderKey orderkey;
-      memcpy(orderkey.username, username, 22);
-      Order order;
-      order.timestamp = timestamp;
-      order.leaving_date = date_;
-      order.leaving_daytime = calculate_daytime;
-      daytime a_daytime = train.starttimes + train.arrival_times[p2];
-      date a_day = dep_date + a_daytime.day;
-      order.arrival_date = a_day;
-      order.arrival_dattime = a_daytime;
-      order.num = number;
-      order.price = price;
-      order.status = 1;
-      memcpy(order.from, from, 52);
-      memcpy(order.to, to, 52);
-      memcpy(order.trainID, trainid, 22);
-      ordertree.Insert(orderkey, order);
-      std::cout << totalcost << '\n';
-      return true;
-    } else if (flag == false) {
-      std::cout << -1 << '\n';
-      return false;
-    } else {
-      Order order;
-      OrderKey orderkey;
-      memcpy(orderkey.username, username, 22);
-      order.leaving_date = date_;
-      order.leaving_daytime = calculate_daytime;
-      daytime a_daytime = train.starttimes + train.arrival_times[p2];
-      date a_day = dep_date + a_daytime.day;
-      order.arrival_date = a_day;
-      order.arrival_dattime = a_daytime;
-      order.num = number;
-      order.price = price;
-      order.status = 0;
-      order.timestamp = timestamp;
-      memcpy(order.from, from, 52);
-      memcpy(order.to, to, 52);
-      memcpy(order.trainID, trainid, 22);
-      seattree.deletenode(seatkey, seatinfo);
-      seatinfo.waitlist_count++;
-      seattree.Insert(seatkey, seatinfo);
-      ordertree.Insert(orderkey, order);
-      WaitlistKey waitlistkey;
-      waitlistkey.date_ = dep_date;
-      memcpy(waitlistkey.trainID, trainid, 22);
-      WaitlistInfo waitlistinfo;
-      waitlistinfo.order_timestamp = timestamp;
-      waitlistinfo.from_rank = p1;
-      waitlistinfo.to_rank = p2;
-      waitlistinfo.num = number;
-      waitlistinfo.order_timestamp = timestamp;
-      memcpy(waitlistinfo.username, username, 22);
-      waitlisttree.Insert(waitlistkey, waitlistinfo);
-      std::cout << "queue" << '\n';
-      return true;
+        seattree.deletenode(seatkey, seatinfo);
+        for (int i = p1; i < p2; i++) {
+            seatinfo.seats[i] -= number;
+        }
+        seattree.Insert(seatkey, seatinfo);
+
+        OrderKey orderkey;
+        std::memset(&orderkey, 0, sizeof(OrderKey));
+        std::strcpy(orderkey.username, username);
+        Order order;
+        std::memset(&order, 0, sizeof(Order));
+        order.timestamp = timestamp;
+        order.leaving_date = date_;
+        order.leaving_daytime = calculate_daytime;
+        daytime a_daytime = train.starttimes + train.arrival_times[p2];
+        date a_day = dep_date + a_daytime.day;
+        order.arrival_date = a_day;
+        order.arrival_dattime = a_daytime;
+        order.num = number;
+        order.price = price;
+        order.status = 1;
+        std::strcpy(order.from, from);
+        std::strcpy(order.to, to);
+        std::strcpy(order.trainID, trainid);
+
+        ordertree.Insert(orderkey, order);
+        std::cout << totalcost << '\n';
+        return true;
+    } 
+    else if (flag == false) {
+        std::cout << -1 << '\n';
+        return false;
+    } 
+    else {
+        OrderKey orderkey;
+        std::memset(&orderkey, 0, sizeof(OrderKey));
+        std::strcpy(orderkey.username, username);
+        Order order;
+        std::memset(&order, 0, sizeof(Order));
+        order.leaving_date = date_;
+        order.leaving_daytime = calculate_daytime;
+        daytime a_daytime = train.starttimes + train.arrival_times[p2];
+        date a_day = dep_date + a_daytime.day;
+        order.arrival_date = a_day;
+        order.arrival_dattime = a_daytime;
+        order.num = number;
+        order.price = price;
+        order.status = 0; 
+        order.timestamp = timestamp;
+        std::strcpy(order.from, from);
+        std::strcpy(order.to, to);
+        std::strcpy(order.trainID, trainid);
+        seattree.deletenode(seatkey, seatinfo);
+        seatinfo.waitlist_count++;
+        seattree.Insert(seatkey, seatinfo);
+        ordertree.Insert(orderkey, order);
+        WaitlistKey waitlistkey;
+        std::memset(&waitlistkey, 0, sizeof(WaitlistKey));
+        waitlistkey.date_ = dep_date;
+        std::strcpy(waitlistkey.trainID, trainid);
+        WaitlistInfo waitlistinfo;
+        std::memset(&waitlistinfo, 0, sizeof(WaitlistInfo));
+        waitlistinfo.from_rank = p1;
+        waitlistinfo.to_rank = p2;
+        waitlistinfo.num = number;
+        waitlistinfo.order_timestamp = timestamp;
+        std::strcpy(waitlistinfo.username, username);
+        waitlisttree.Insert(waitlistkey, waitlistinfo);
+        std::cout << "queue" << '\n';
+        return true;
     }
-  }
+}
   bool query_order(char *username, usermanager &usersystem) {
     auto it = usersystem.logstack.find(UsernameKey(username));
     sjtu::vector<user> u =
@@ -688,10 +753,10 @@ bool query_transfer(date d, char* from, char* to, int flag) {
       std::cout << -1 << '\n';
       return false;
     }
-    OrderKey search_key;
-    std::memset(&search_key, 0, sizeof(OrderKey));
-    std::memcpy(search_key.username, username, 22);
-    sjtu::vector<Order> orders = ordertree.find_by_index(search_key);
+    OrderKey searchkey;
+std::memset(&searchkey, 0, sizeof(OrderKey));
+std::strcpy(searchkey.username, username);
+    sjtu::vector<Order> orders = ordertree.find_by_index(searchkey);
     std::cout << orders.size() << '\n';
     if (orders.size() == 0) {
       return true;
@@ -703,11 +768,11 @@ bool query_transfer(date d, char* from, char* to, int flag) {
     for (int i = 0; i < orders.size(); i++) {
       const char *status_str = "";
       if (orders[i].status == 1) {
-        status_str = "[SUCCESS]";
+        status_str = "[success]";
       } else if (orders[i].status == 0) {
-        status_str = "[PENDING]";
+        status_str = "[pending]";
       } else if (orders[i].status == 2) {
-        status_str = "[REFUNDED]";
+        status_str = "[refunded]";
       }
       std::cout << status_str << ' ' << orders[i].trainID << ' '
                 << orders[i].from << ' ' << orders[i].leaving_date << ' '
@@ -719,147 +784,159 @@ bool query_transfer(date d, char* from, char* to, int flag) {
     return true;
   }
   static bool comparewaitlistinfo(WaitlistInfo x, WaitlistInfo y) {
-    return x.order_timestamp > y.order_timestamp;
+    return x.order_timestamp < y.order_timestamp;
   }
   bool refund_ticket(int n, char *username, usermanager &usersystem) {
     auto it = usersystem.logstack.find(UsernameKey(username));
-    sjtu::vector<user> u =
-        usersystem.usertree.find_by_index(UsernameKey(username));
+    sjtu::vector<user> u = usersystem.usertree.find_by_index(UsernameKey(username));
     if (u.size() == 0 || it == usersystem.logstack.end()) {
-      std::cout << -1 << '\n';
-      return false;
+        std::cout << -1 << '\n';
+        return false;
     }
 
     OrderKey orderkey;
-    memcpy(orderkey.username, username, 22);
+    std::memset(&orderkey, 0, sizeof(OrderKey));
+    std::strcpy(orderkey.username, username);
     sjtu::vector<Order> order = ordertree.find_by_index(orderkey);
     if (order.size() == 0) {
-      std::cout << -1 << '\n';
-      return false;
+        std::cout << -1 << '\n';
+        return false;
     }
+    
     std::sort(order.begin(), order.end(), [](const Order &a, const Order &b) {
-      return a.timestamp > b.timestamp;
+        return a.timestamp > b.timestamp;
     });
 
     if (n <= 0 || n > order.size()) {
-      std::cout << -1 << '\n';
-      return false;
+        std::cout << -1 << '\n';
+        return false;
     }
 
     Order target_order = order[n - 1];
-    if (target_order.status == 2) {
-      std::cout << -1 << '\n';
-      return false;
+    if (target_order.status == 2) { 
+        std::cout << -1 << '\n';
+        return false;
     }
     OrderKey actual_orderkey;
-    memcpy(actual_orderkey.username, username, 22);
+    std::memset(&actual_orderkey, 0, sizeof(OrderKey));
+    std::strcpy(actual_orderkey.username, username);
     if (target_order.status == 0) {
-      date dep_date =
-          target_order.leaving_date - target_order.leaving_daytime.day;
-      ordertree.deletenode(actual_orderkey, target_order);
-      target_order.status = 2;
-      ordertree.Insert(actual_orderkey, target_order);
+        date dep_date = target_order.leaving_date - target_order.leaving_daytime.day;
+        ordertree.deletenode(actual_orderkey, target_order);
+        target_order.status = 2;
+        ordertree.Insert(actual_orderkey, target_order);
 
-      Train train =
-          traintree.find_by_index(trainKey(target_order.trainID)).back();
-      int p1 = 0, p2 = 0;
-      for (int i = 1; i <= train.station_num; i++) {
-        if (memcmp(train.stations[i], target_order.from, 52) == 0)
-          p1 = i;
-        if (memcmp(train.stations[i], target_order.to, 52) == 0)
-          p2 = i;
-      }
-      WaitlistKey waitlistkey;
-      waitlistkey.date_ = dep_date;
-      memcpy(waitlistkey.trainID, target_order.trainID, 22);
+        Train train = traintree.find_by_index(trainKey(target_order.trainID)).back();
+        int p1 = 0, p2 = 0;
+        for (int i = 1; i <= train.station_num; i++) {
+            if (std::string(train.stations[i]) == std::string(target_order.from))
+                p1 = i;
+            if (std::string(train.stations[i]) == std::string(target_order.to))
+                p2 = i;
+        }
+        WaitlistKey waitlistkey;
+        std::memset(&waitlistkey, 0, sizeof(WaitlistKey));
+        waitlistkey.date_ = dep_date;
+        std::strcpy(waitlistkey.trainID, target_order.trainID);
+        WaitlistInfo waitlistinfo;
+        std::memset(&waitlistinfo, 0, sizeof(WaitlistInfo));
+        waitlistinfo.from_rank = p1;
+        waitlistinfo.to_rank = p2;
+        waitlistinfo.num = target_order.num;
+        waitlistinfo.order_timestamp = target_order.timestamp;
+        std::strcpy(waitlistinfo.username, username);
+        
+        waitlisttree.deletenode(waitlistkey, waitlistinfo);
 
-      WaitlistInfo waitlistinfo;
-      waitlistinfo.from_rank = p1;
-      waitlistinfo.to_rank = p2;
-      waitlistinfo.num = target_order.num;
-      waitlistinfo.order_timestamp = target_order.timestamp;
-      memcpy(waitlistinfo.username, username, 22);
-      waitlisttree.deletenode(waitlistkey, waitlistinfo);
-      SeatKey seatkey;
-      seatkey.startdate = dep_date;
-      memcpy(seatkey.trainID, target_order.trainID, 22);
-      sjtu::vector<SeatInfo> sea = seattree.find_by_index(seatkey);
-      if (sea.size() > 0) {
+        SeatKey seatkey;
+        std::memset(&seatkey, 0, sizeof(SeatKey));
+        seatkey.startdate = dep_date;
+        std::strcpy(seatkey.trainID, target_order.trainID);
+        sjtu::vector<SeatInfo> sea = seattree.find_by_index(seatkey);
+        if (sea.size() > 0) {
+            SeatInfo seatinfo = sea.back();
+            seattree.deletenode(seatkey, seatinfo);
+            seatinfo.waitlist_count--;
+            seattree.Insert(seatkey, seatinfo);
+        }
+
+        std::cout << 0 << '\n';
+        return true;
+    } 
+    else if (target_order.status == 1) {
+        date dep_date = target_order.leaving_date - target_order.leaving_daytime.day;
+        ordertree.deletenode(actual_orderkey, target_order);
+        target_order.status = 2; 
+        ordertree.Insert(actual_orderkey, target_order);
+        Train train = traintree.find_by_index(trainKey(target_order.trainID)).back();
+        int p1 = 0, p2 = 0;
+        for (int i = 1; i <= train.station_num; i++) {
+            if (std::string(train.stations[i]) == std::string(target_order.from))
+                p1 = i;
+            if (std::string(train.stations[i]) == std::string(target_order.to))
+                p2 = i;
+        }
+        SeatKey seatkey;
+        std::memset(&seatkey, 0, sizeof(SeatKey));
+        seatkey.startdate = dep_date;
+        std::strcpy(seatkey.trainID, target_order.trainID);
+        
+        sjtu::vector<SeatInfo> sea = seattree.find_by_index(seatkey);
+        if (sea.size() == 0) {
+            std::cout << -1 << '\n';
+            return false;
+        }
         SeatInfo seatinfo = sea.back();
         seattree.deletenode(seatkey, seatinfo);
-        seatinfo.waitlist_count--;
-        seattree.Insert(seatkey, seatinfo);
-      }
-
-      std::cout << 0 << '\n';
-      return true;
-    } else if (target_order.status == 1) {
-      date dep_date =
-          target_order.leaving_date - target_order.leaving_daytime.day;
-      ordertree.deletenode(actual_orderkey, target_order);
-      target_order.status = 2;
-      ordertree.Insert(actual_orderkey, target_order);
-
-      Train train =
-          traintree.find_by_index(trainKey(target_order.trainID)).back();
-      int p1 = 0, p2 = 0;
-      for (int i = 1; i <= train.station_num; i++) {
-        if (memcmp(train.stations[i], target_order.from, 52) == 0)
-          p1 = i;
-        if (memcmp(train.stations[i], target_order.to, 52) == 0)
-          p2 = i;
-      }
-      SeatKey seatkey;
-      seatkey.startdate = dep_date;
-      memcpy(seatkey.trainID, target_order.trainID, 22);
-      sjtu::vector<SeatInfo> sea = seattree.find_by_index(seatkey);
-      SeatInfo seatinfo = sea.back();
-      seattree.deletenode(seatkey, seatinfo);
-
-      for (int i = p1; i < p2; i++) {
-        seatinfo.seats[i] += target_order.num;
-      }
-      WaitlistKey key;
-      memcpy(key.trainID, target_order.trainID, 22);
-      key.date_ = dep_date;
-      auto waitlist_vec = waitlisttree.find_by_index(key);
-      std::sort(waitlist_vec.begin(), waitlist_vec.end(), comparewaitlistinfo);
-      for (int i = 0; i < waitlist_vec.size(); i++) {
-        auto &wl_key = key;
-        auto &wl_info = waitlist_vec[i];
-        int cur_min_seat = train.seat_num;
-        for (int j = wl_info.from_rank; j < wl_info.to_rank; j++) {
-          if (seatinfo.seats[j] < cur_min_seat) {
-            cur_min_seat = seatinfo.seats[j];
-          }
+        for (int i = p1; i < p2; i++) {
+            seatinfo.seats[i] += target_order.num;
         }
-        if (cur_min_seat >= wl_info.num) {
-          for (int j = wl_info.from_rank; j < wl_info.to_rank; j++) {
-            seatinfo.seats[j] -= wl_info.num;
-          }
-          OrderKey wl_orderkey;
-          memcpy(wl_orderkey.username, wl_info.username, 22);
-          sjtu::vector<Order> wl_orders = ordertree.find_by_index(wl_orderkey);
-          for (int k = 0; k < wl_orders.size(); k++) {
-            if (wl_orders[k].timestamp == wl_info.order_timestamp) {
-              Order wl_order = wl_orders[k];
-              ordertree.deletenode(wl_orderkey, wl_order);
-              wl_order.status = 1;
-              ordertree.Insert(wl_orderkey, wl_order);
-              break;
+        WaitlistKey key;
+        std::memset(&key, 0, sizeof(WaitlistKey));
+        std::strcpy(key.trainID, target_order.trainID);
+        key.date_ = dep_date;
+        
+        auto waitlist_vec = waitlisttree.find_by_index(key);
+        std::sort(waitlist_vec.begin(), waitlist_vec.end(), comparewaitlistinfo);
+        for (int i = 0; i < waitlist_vec.size(); i++) {
+            auto &wl_key = key;
+            auto &wl_info = waitlist_vec[i];
+            int cur_min_seat = train.seat_num;
+            for (int j = wl_info.from_rank; j < wl_info.to_rank; j++) {
+                if (seatinfo.seats[j] < cur_min_seat) {
+                    cur_min_seat = seatinfo.seats[j];
+                }
             }
-          }
-          waitlisttree.deletenode(wl_key, wl_info);
-          seatinfo.waitlist_count--;
+            if (cur_min_seat >= wl_info.num) {
+                for (int j = wl_info.from_rank; j < wl_info.to_rank; j++) {
+                    seatinfo.seats[j] -= wl_info.num;
+                }
+                
+                OrderKey wl_orderkey;
+                std::memset(&wl_orderkey, 0, sizeof(OrderKey));
+                std::strcpy(wl_orderkey.username, wl_info.username);
+                sjtu::vector<Order> wl_orders = ordertree.find_by_index(wl_orderkey);
+                
+                for (int k = 0; k < wl_orders.size(); k++) {
+                    if (wl_orders[k].timestamp == wl_info.order_timestamp && wl_orders[k].status == 0) {
+                        Order wl_order = wl_orders[k];
+                        ordertree.deletenode(wl_orderkey, wl_order);
+                        wl_order.status = 1;
+                        ordertree.Insert(wl_orderkey, wl_order);
+                        break;
+                    }
+                }
+                waitlisttree.deletenode(wl_key, wl_info);
+                seatinfo.waitlist_count--;
+            }
         }
-      }
-      seattree.Insert(seatkey, seatinfo);
-      std::cout << 0 << '\n';
-      return true;
+        seattree.Insert(seatkey, seatinfo);
+        std::cout << 0 << '\n';
+        return true;
     }
 
     return false;
-  }
+}
   void clean (usermanager & x) {
     x.logstack.clear();
     x.usertree.clear();

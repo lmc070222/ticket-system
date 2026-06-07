@@ -2,11 +2,13 @@
 #define Bplustree_HPP
 #include "src/vector.hpp"
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <ios>
 #include <iostream>
-#include <limits>
 #include <string>
+#include <type_traits>
+
 struct String64 {
   char data[64];
   String64() { memset(data, 0, 64); }
@@ -37,6 +39,7 @@ struct String64 {
     return strcmp(data, other.data) != 0;
   }
 };
+
 struct IndexValueKey {
   String64 index;
   int value;
@@ -63,36 +66,71 @@ struct IndexValueKey {
     return a.index < b.index;
   }
 };
+
 template <typename KeyType, typename ValueType, int M> class Bplustree {
 public:
   struct FileHeader {
     uint32_t root_page;
     uint32_t leaf_head;
   };
+
 #pragma pack(push, 1)
   struct NodePage {
     bool is_leaf;
     int key_num;
     KeyType keys[M + 2];
-    uint32_t parent = 0;
-    union {
-      ValueType values[M + 2];
-      uint32_t children[M + 2];
-    };
-    uint32_t next = 0;
+    uint32_t parent;
+    
+    static const size_t ELEM_SIZE = (sizeof(ValueType) > sizeof(uint32_t)) ? sizeof(ValueType) : sizeof(uint32_t);
+    char values_or_children_data[ELEM_SIZE * (M + 2)];
+    
+    uint32_t next;
+    
+    NodePage() : is_leaf(false), key_num(0), parent(0), next(0) {
+      memset(values_or_children_data, 0, sizeof(values_or_children_data));
+    }
+    
+    ValueType& get_value(int idx) {
+      return *reinterpret_cast<ValueType*>(values_or_children_data + idx * ELEM_SIZE);
+    }
+    
+    const ValueType& get_value(int idx) const {
+      return *reinterpret_cast<const ValueType*>(values_or_children_data + idx * ELEM_SIZE);
+    }
+    
+    uint32_t& get_child(int idx) {
+      return *reinterpret_cast<uint32_t*>(values_or_children_data + idx * ELEM_SIZE);
+    }
+    
+    const uint32_t& get_child(int idx) const {
+      return *reinterpret_cast<const uint32_t*>(values_or_children_data + idx * ELEM_SIZE);
+    }
+    
+    void set_value(int idx, const ValueType& val) {
+      *reinterpret_cast<ValueType*>(values_or_children_data + idx * ELEM_SIZE) = val;
+    }
+    
+    void set_child(int idx, uint32_t child) {
+      *reinterpret_cast<uint32_t*>(values_or_children_data + idx * ELEM_SIZE) = child;
+    }
   };
 #pragma pack(pop)
+
   class FileManager {
   public:
     std::fstream s;
+    std::string fname;
+
     struct CachePage {
-      uint32_t page_no = 0;
-      bool is_dirty = false;
+      uint32_t page_no;
+      bool is_dirty;
       NodePage page;
+      
+      CachePage() : page_no(0), is_dirty(false) {}
     };
     static const int CACHE_SIZE = 16;
     CachePage cache[CACHE_SIZE];
-    int replace_idx = 0;
+    int replace_idx;
 
     int getvalue(uint32_t a) {
       if (a == 0)
@@ -115,15 +153,19 @@ public:
     }
 
     void flush(int a) {
-      if (cache[a].page_no != 0 and cache[a].is_dirty == true) {
+      if (cache[a].page_no != 0 && cache[a].is_dirty == true) {
         s.clear();
         s.seekp((cache[a].page_no - 1) * sizeof(NodePage) + sizeof(FileHeader));
         s.write(reinterpret_cast<char *>(&cache[a].page), sizeof(NodePage));
         cache[a].is_dirty = false;
       }
     }
-
-    FileManager(const std::string &filename) {
+    
+    FileManager(const std::string &filename) : fname(filename), replace_idx(0) {
+      for (int i = 0; i < CACHE_SIZE; i++) {
+        cache[i].page_no = 0;
+        cache[i].is_dirty = false;
+      }
       s.open(filename, std::ios::in | std::ios::out | std::ios::binary);
       if (!s.is_open()) {
         s.clear();
@@ -131,6 +173,18 @@ public:
         s.close();
         s.open(filename, std::ios::in | std::ios::out | std::ios::binary);
       }
+    }
+    
+    void clear_file() {
+      if (s.is_open())
+        s.close();
+      s.open(fname,
+             std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
+      for (int i = 0; i < CACHE_SIZE; i++) {
+        cache[i].page_no = 0;
+        cache[i].is_dirty = false;
+      }
+      replace_idx = 0;
     }
 
     void ReadPage(uint32_t page_no, NodePage *buf) {
@@ -153,6 +207,7 @@ public:
       cache[idx_free].is_dirty = false;
       cache[idx_free].page = *buf;
     }
+
     void WritePage(uint32_t page_no, NodePage *buf) {
       int idx = getvalue(page_no);
       if (idx == -1) {
@@ -199,18 +254,25 @@ public:
       for (int i = 0; i < CACHE_SIZE; i++) {
         flush(i);
       }
-      s.close();
+      if (s.is_open())
+        s.close();
     }
   };
-  const std::string name = "data";
+  
+  std::string filename_path;
   FileManager fm;
   uint32_t root_page_;
   uint32_t leaf_head_;
-  Bplustree() : fm(name), root_page_(0), leaf_head_(0) {
+  
+  Bplustree(const std::string &filename)
+      : filename_path(filename), fm(filename_path), root_page_(0),
+        leaf_head_(0) {
     fm.s.seekg(0, std::ios::end);
     auto fileSize = fm.s.tellg();
     if (fileSize < sizeof(FileHeader)) {
-      FileHeader init{0, 0};
+      FileHeader init;
+      init.root_page = 0;
+      init.leaf_head = 0;
       fm.WriteHeader(&init);
     } else {
       FileHeader header;
@@ -219,6 +281,50 @@ public:
       leaf_head_ = header.leaf_head;
     }
   }
+  
+  void clear() {
+    fm.clear_file();
+    root_page_ = 0;
+    leaf_head_ = 0;
+    FileHeader init;
+    init.root_page = 0;
+    init.leaf_head = 0;
+    fm.WriteHeader(&init);
+  }
+  
+  sjtu::vector<ValueType> find_by_index(const KeyType &index) {
+    sjtu::vector<ValueType> ans;
+    if (root_page_ == 0)
+      return ans;
+    uint32_t cur_page = root_page_;
+    NodePage cur_node;
+    while (true) {
+      fm.ReadPage(cur_page, &cur_node);
+      if (cur_node.is_leaf)
+        break;
+      int i = 0;
+      for (; i < cur_node.key_num; ++i) {
+        if (cur_node.keys[i] >= index)
+          break;
+      }
+      cur_page = cur_node.get_child(i);
+    }
+    while (true) {
+      fm.ReadPage(cur_page, &cur_node);
+      for (int i = 0; i < cur_node.key_num; ++i) {
+        if (cur_node.keys[i] == index) {
+          ans.push_back(cur_node.get_value(i));
+        } else if (cur_node.keys[i] > index) {
+          return ans;
+        }
+      }
+      if (cur_node.next == 0)
+        break;
+      cur_page = cur_node.next;
+    }
+    return ans;
+  }
+
   void SplitInternal(uint32_t page_no, NodePage &curnode) {
     NodePage new_node;
     new_node.is_leaf = false;
@@ -231,14 +337,14 @@ public:
       new_node.keys[i - (mid + 1)] = curnode.keys[i];
     }
     for (int i = mid + 1; i <= total; i++) {
-      new_node.children[i - (mid + 1)] = curnode.children[i];
+      new_node.set_child(i - (mid + 1), curnode.get_child(i));
     }
     curnode.key_num = mid;
 
     new_node.parent = curnode.parent;
     uint32_t new_page = fm.AllocPage(&new_node);
     for (int i = 0; i <= new_node.key_num; i++) {
-      uint32_t child_no = new_node.children[i];
+      uint32_t child_no = new_node.get_child(i);
       NodePage child;
       fm.ReadPage(child_no, &child);
       child.parent = new_page;
@@ -247,6 +353,7 @@ public:
     fm.WritePage(page_no, &curnode);
     InsertIntoParent(page_no, promote_key, new_page);
   }
+  
   void InsertIntoParent(uint32_t leftPageNo, KeyType key,
                         uint32_t rightPageNo) {
     NodePage leftnode;
@@ -259,8 +366,8 @@ public:
       new_parent.is_leaf = false;
       new_parent.key_num = 1;
       new_parent.keys[0] = key;
-      new_parent.children[0] = leftPageNo;
-      new_parent.children[1] = rightPageNo;
+      new_parent.set_child(0, leftPageNo);
+      new_parent.set_child(1, rightPageNo);
       leftnode.parent = fm.AllocPage(&new_parent);
       rightnode.parent = leftnode.parent;
       FileHeader fileheader;
@@ -277,32 +384,33 @@ public:
     fm.ReadPage(parentno, &parent);
     int k = -1;
     for (int i = 0; i <= parent.key_num; i++) {
-      if (parent.children[i] == leftPageNo) {
+      if (parent.get_child(i) == leftPageNo) {
         k = i;
         break;
       }
     }
     for (int i = parent.key_num; i > k; i--) {
-      parent.children[i + 1] = parent.children[i];
+      parent.set_child(i + 1, parent.get_child(i));
     }
     for (int i = parent.key_num - 1; i >= k; i--) {
       parent.keys[i + 1] = parent.keys[i];
     }
     parent.keys[k] = key;
-    parent.children[k + 1] = rightPageNo;
+    parent.set_child(k + 1, rightPageNo);
     parent.key_num++;
     fm.WritePage(parentno, &parent);
     if (parent.key_num <= M - 1)
       return;
     SplitInternal(parentno, parent);
   }
+  
   void SplitLeaf(uint32_t page_no, NodePage &curnode) {
     NodePage new_leaf;
     new_leaf.is_leaf = true;
     int t = 0;
     for (int i = M / 2; i < curnode.key_num; i++) {
       new_leaf.keys[t] = curnode.keys[i];
-      new_leaf.values[t] = curnode.values[i];
+      new_leaf.set_value(t, curnode.get_value(i));
       t++;
     }
     curnode.key_num = M / 2;
@@ -310,19 +418,23 @@ public:
     new_leaf.parent = curnode.parent;
 
     new_leaf.next = curnode.next;
-
     curnode.next = fm.AllocPage(&new_leaf);
 
     fm.WritePage(page_no, &curnode);
     InsertIntoParent(page_no, curnode.keys[curnode.key_num - 1], curnode.next);
   }
+  
+  bool empty() const {
+    return root_page_ == 0;
+  }
+  
   void Insert(KeyType &index, ValueType &value) {
     if (root_page_ == 0) {
       NodePage new_;
       new_.is_leaf = true;
       new_.key_num = 1;
       new_.keys[0] = index;
-      new_.values[0] = value;
+      new_.set_value(0, value);
       new_.parent = 0;
       new_.next = 0;
       uint32_t new_page = fm.AllocPage(&new_);
@@ -344,14 +456,14 @@ public:
             if (curnode.keys[i] >= index)
               break;
           }
-          x = curnode.children[i];
+          x = curnode.get_child(i);
         }
       }
       NodePage check_node = curnode;
       while (true) {
         bool stop_search = false;
         for (int i = 0; i < check_node.key_num; i++) {
-          if (check_node.keys[i] == index and check_node.values[i] == value) {
+          if (check_node.keys[i] == index && check_node.get_value(i) == value) {
             return;
           }
           if (check_node.keys[i] > index) {
@@ -380,11 +492,11 @@ public:
 
       for (int j = curnode.key_num - 1; j >= k; j--) {
         curnode.keys[j + 1] = curnode.keys[j];
-        curnode.values[j + 1] = curnode.values[j];
+        curnode.set_value(j + 1, curnode.get_value(j));
       }
       curnode.key_num++;
       curnode.keys[k] = index;
-      curnode.values[k] = value;
+      curnode.set_value(k, value);
       fm.WritePage(x, &curnode);
 
       if (curnode.key_num <= M)
@@ -394,6 +506,7 @@ public:
       }
     }
   }
+  
   void sibling(uint32_t curno, uint32_t afterno) {
     NodePage curnode;
     NodePage afternode;
@@ -406,7 +519,7 @@ public:
       for (int i = curnode.key_num; i < curnode.key_num + afternode.key_num;
            i++) {
         curnode.keys[i] = afternode.keys[t];
-        curnode.values[i] = afternode.values[t];
+        curnode.set_value(i, afternode.get_value(t));
         t++;
       }
       curnode.key_num = curnode.key_num + afternode.key_num;
@@ -414,18 +527,12 @@ public:
     } else {
       int cur, after;
       for (int i = 0; i <= parentnode.key_num; i++) {
-        if (parentnode.children[i] == curno)
+        if (parentnode.get_child(i) == curno)
           cur = i;
-        if (parentnode.children[i] == afterno)
+        if (parentnode.get_child(i) == afterno)
           after = i;
       }
       int t = 0, t1 = 0;
-      /*for (int i = curnode.key_num; i < curnode.key_num + afternode.key_num;
-           i++) {
-        curnode.keys[i] = afternode.keys[t];
-        curnode.children[i] = afternode.children[t];
-        t++;
-      }*/
       curnode.keys[curnode.key_num] = parentnode.keys[cur];
       for (int i = curnode.key_num + 1;
            i < curnode.key_num + afternode.key_num + 1; i++) {
@@ -434,8 +541,8 @@ public:
       }
       for (int i = curnode.key_num + 1;
            i < curnode.key_num + afternode.key_num + 2; i++) {
-        curnode.children[i] = afternode.children[t1];
-        uint32_t moved_child_no = curnode.children[i];
+        curnode.set_child(i, afternode.get_child(t1));
+        uint32_t moved_child_no = curnode.get_child(i);
         NodePage moved_child;
         fm.ReadPage(moved_child_no, &moved_child);
         moved_child.parent = curno;
@@ -444,191 +551,52 @@ public:
       }
       curnode.key_num = curnode.key_num + afternode.key_num + 1;
     }
-    int cur, after;
+    fm.WritePage(curno, &curnode);
+    fm.WritePage(afterno, &afternode);
+
+    int curk = -1, afterk = -1;
     for (int i = 0; i <= parentnode.key_num; i++) {
-      if (parentnode.children[i] == curno)
-        cur = i;
-      if (parentnode.children[i] == afterno)
-        after = i;
+      if (parentnode.get_child(i) == curno)
+        curk = i;
+      if (parentnode.get_child(i) == afterno)
+        afterk = i;
     }
-    for (int i = cur; i < parentnode.key_num - 1; i++) {
+    // 【不变】使用左移来覆盖被合并掉的路由键与子节点指针
+    for (int i = curk; i < parentnode.key_num - 1; i++) {
       parentnode.keys[i] = parentnode.keys[i + 1];
     }
-    for (int i = after; i < parentnode.key_num; i++) {
-      parentnode.children[i] = parentnode.children[i + 1];
+    for (int i = afterk; i < parentnode.key_num; i++) {
+      parentnode.set_child(i, parentnode.get_child(i + 1));
     }
     parentnode.key_num--;
     fm.WritePage(curnode.parent, &parentnode);
-    fm.WritePage(curno, &curnode);
+    
     if (parentnode.key_num >= M / 2)
       return;
-    if (curnode.parent == root_page_) {
+    if (parentnode.parent == 0) {
       if (parentnode.key_num == 0) {
-        curnode.parent = 0;
-        root_page_ = curno;
-        FileHeader header{root_page_, leaf_head_};
-        fm.WriteHeader(&header);
-        fm.WritePage(curno, &curnode);
-      }
-      return;
-    }
-    balancedelete(curnode.parent);
-  }
-  void balancedelete(uint32_t pageno) {
-    if (pageno == root_page_)
-      return;
-    NodePage curnode;
-    NodePage parentnode;
-    NodePage leftnode;
-    NodePage rightnode;
-    fm.ReadPage(pageno, &curnode);
-    uint32_t parentno = curnode.parent;
-    fm.ReadPage(parentno, &parentnode);
-    int k;
-    for (int i = 0; i <= parentnode.key_num; i++) {
-      if (parentnode.children[i] == pageno) {
-        k = i;
-        break;
-      }
-    }
-    if (k != 0) {
-      fm.ReadPage(parentnode.children[k - 1], &leftnode);
-      if (leftnode.key_num > M / 2) {  // 向左借一个节点
-        if (curnode.is_leaf == true) { // 叶子节点
-          for (int i = curnode.key_num - 1; i >= 0; i--) {
-            curnode.keys[i + 1] = curnode.keys[i];
-            curnode.values[i + 1] = curnode.values[i];
-          }
-          curnode.keys[0] = leftnode.keys[leftnode.key_num - 1];
-          curnode.values[0] = leftnode.values[leftnode.key_num - 1];
-          curnode.key_num++;
-          leftnode.key_num--;
-          parentnode.keys[k - 1] = leftnode.keys[leftnode.key_num - 1];
-          fm.WritePage(pageno, &curnode);
-          fm.WritePage(parentno, &parentnode);
-          fm.WritePage(parentnode.children[k - 1], &leftnode);
-          return;
-        }
-        if (curnode.is_leaf == false) { // 非叶子节点
-          for (int i = curnode.key_num; i >= 0; --i) {
-            curnode.children[i + 1] = curnode.children[i];
-          }
-          for (int i = curnode.key_num - 1; i >= 0; --i) {
-            curnode.keys[i + 1] = curnode.keys[i];
-          }
-          curnode.keys[0] = parentnode.keys[k - 1];
-          curnode.children[0] = leftnode.children[leftnode.key_num];
-          uint32_t moved_child_no = curnode.children[0];
-          NodePage moved_child;
-          fm.ReadPage(moved_child_no, &moved_child);
-          moved_child.parent = pageno; // 指向 curnode 的页号
-          fm.WritePage(moved_child_no, &moved_child);
-          parentnode.keys[k - 1] = leftnode.keys[leftnode.key_num - 1];
-          curnode.key_num++;
-          leftnode.key_num--;
-          fm.WritePage(pageno, &curnode);
-          fm.WritePage(parentno, &parentnode);
-          fm.WritePage(parentnode.children[k - 1], &leftnode);
-          return;
+        if (parentnode.is_leaf == false) {
+          uint32_t onlyChild = parentnode.get_child(0);
+          NodePage only;
+          fm.ReadPage(onlyChild, &only);
+          only.parent = 0;
+          root_page_ = onlyChild;
+          FileHeader header;
+          header.root_page = root_page_;
+          header.leaf_head = leaf_head_;
+          fm.WriteHeader(&header);
+          fm.WritePage(onlyChild, &only);
         }
       }
-    }
-    if (k != parentnode.key_num) {
-      fm.ReadPage(parentnode.children[k + 1], &rightnode);
-      if (rightnode.key_num > M / 2) { // 向右借一个节点
-        if (curnode.is_leaf == true) { // 叶子节点
-          curnode.keys[curnode.key_num] = rightnode.keys[0];
-          curnode.values[curnode.key_num] = rightnode.values[0];
-          for (int i = 0; i < rightnode.key_num - 1; i++) {
-            rightnode.keys[i] = rightnode.keys[i + 1];
-            rightnode.values[i] = rightnode.values[i + 1];
-          }
-          curnode.key_num++;
-          rightnode.key_num--;
-          parentnode.keys[k] = curnode.keys[curnode.key_num - 1];
-          fm.WritePage(pageno, &curnode);
-          fm.WritePage(parentno, &parentnode);
-          fm.WritePage(parentnode.children[k + 1], &rightnode);
-          return;
-        }
-        if (curnode.is_leaf == false) { // 非叶子节点
-          curnode.keys[curnode.key_num] = parentnode.keys[k];
-          curnode.children[curnode.key_num + 1] = rightnode.children[0];
-          uint32_t moved_child_no = curnode.children[curnode.key_num + 1];
-          NodePage moved_child;
-          fm.ReadPage(moved_child_no, &moved_child);
-          moved_child.parent = pageno;
-          fm.WritePage(moved_child_no, &moved_child);
-          curnode.key_num++;
-          parentnode.keys[k] = rightnode.keys[0];
-          for (int i = 0; i < rightnode.key_num - 1; i++) {
-            rightnode.keys[i] = rightnode.keys[i + 1];
-            rightnode.children[i] = rightnode.children[i + 1];
-          }
-          rightnode.children[rightnode.key_num - 1] =
-              rightnode.children[rightnode.key_num];
-          rightnode.key_num--;
-          fm.WritePage(pageno, &curnode);
-          fm.WritePage(parentno, &parentnode);
-          fm.WritePage(parentnode.children[k + 1], &rightnode);
-          return;
-        }
-      }
-    }
-    if (k != 0) {
-      sibling(parentnode.children[k - 1], pageno);
-      return;
-    }
-    if (k != parentnode.key_num) {
-      sibling(pageno, parentnode.children[k + 1]);
       return;
     }
   }
-  void search(uint32_t nextpageno, KeyType &index,
-              ValueType &value) { // 在nextpageno中寻找键值对
-    NodePage nextpage;
-    fm.ReadPage(nextpageno, &nextpage);
-    int k = nextpage.key_num;
-    for (int i = 0; i < nextpage.key_num; i++) {
-      if (nextpage.keys[i] >= index) {
-        k = i;
-        break;
-      }
-    }
-    if (nextpage.key_num == k)
-      return;
-    while (true) {
-      if (nextpage.keys[k] > index)
-        return;
-      if (nextpage.keys[k] == index) {
-        if (nextpage.values[k] == value) {
-          nextpage.key_num--;
-          for (int i = k; i < nextpage.key_num; i++) {
-            nextpage.keys[i] = nextpage.keys[i + 1];
-            nextpage.values[i] = nextpage.values[i + 1];
-          }
-          fm.WritePage(nextpageno, &nextpage);
-          if (nextpage.key_num < M / 2) {
-            balancedelete(nextpageno);
-          }
-          return;
-        }
-      }
-      k++;
-      if (k >= nextpage.key_num) {
-        if (nextpage.next != 0)
-          search(nextpage.next, index, value);
-        return;
-      }
-    }
-  }
+  
   void deletenode(KeyType &index, ValueType &value) {
-    if (root_page_ == 0)
-      return;
+    uint32_t cur_page = root_page_;
     NodePage curnode;
-    uint32_t x = root_page_;
     while (true) {
-      fm.ReadPage(x, &curnode);
+      fm.ReadPage(cur_page, &curnode);
       if (curnode.is_leaf == true)
         break;
       else {
@@ -637,91 +605,97 @@ public:
           if (curnode.keys[i] >= index)
             break;
         }
-        x = curnode.children[i];
+        cur_page = curnode.get_child(i);
       }
     }
     while (true) {
-      int k = 0;
-      for (; k < curnode.key_num; k++) {
-        if (curnode.keys[k] >= index)
-          break;
-      }
-      while (k < curnode.key_num) {
-        if (curnode.keys[k] > index)
-          return;
-        if (curnode.keys[k] == index && curnode.values[k] == value) {
-          curnode.key_num--;
-          for (int i = k; i < curnode.key_num; i++) {
+      fm.ReadPage(cur_page, &curnode);
+      for (int k = 0; k < curnode.key_num; k++) {
+        if (curnode.keys[k] == index && curnode.get_value(k) == value) {
+          for (int i = k; i < curnode.key_num - 1; i++) {
             curnode.keys[i] = curnode.keys[i + 1];
-            curnode.values[i] = curnode.values[i + 1];
+            curnode.set_value(i, curnode.get_value(i + 1));
           }
-          fm.WritePage(x, &curnode);
-          if (curnode.key_num < M / 2) {
-            balancedelete(x);
+          curnode.key_num--;
+          fm.WritePage(cur_page, &curnode);
+          if (curnode.key_num >= M / 2 || curnode.parent == 0)
+            return;
+            
+          uint32_t parentpage = curnode.parent;
+          NodePage parentnode;
+          fm.ReadPage(parentpage, &parentnode);
+          int curk = -1;
+          for (int i = 0; i <= parentnode.key_num; i++) {
+            if (parentnode.get_child(i) == cur_page) {
+              curk = i;
+              break;
+            }
+          }
+          // 向左借位
+          if (curk > 0) {
+            NodePage leftsibling;
+            uint32_t leftpage = parentnode.get_child(curk - 1);
+            fm.ReadPage(leftpage, &leftsibling);
+            if (leftsibling.key_num > M / 2) {
+              for (int i = curnode.key_num - 1; i >= 0; i--) {
+                curnode.keys[i + 1] = curnode.keys[i];
+                curnode.set_value(i + 1, curnode.get_value(i));
+              }
+              // 拉取左兄弟的最后一位到 curnode 的第一位
+              curnode.keys[0] = leftsibling.keys[leftsibling.key_num - 1];
+              curnode.set_value(0, leftsibling.get_value(leftsibling.key_num - 1));
+              curnode.key_num++;
+              leftsibling.key_num--;
+              
+              // 【核心修复点】：由于你的实现是父节点保存的是"左子树的最大值"
+              // 所以更新父节点时，应该用左兄弟更新后的最末尾（即最大）值
+              parentnode.keys[curk - 1] = leftsibling.keys[leftsibling.key_num - 1]; 
+              
+              fm.WritePage(cur_page, &curnode);
+              fm.WritePage(leftpage, &leftsibling);
+              fm.WritePage(parentpage, &parentnode);
+              return;
+            }
+          }
+          // 向右借位
+          if (curk < parentnode.key_num) {
+            NodePage rightsibling;
+            uint32_t rightpage = parentnode.get_child(curk + 1);
+            fm.ReadPage(rightpage, &rightsibling);
+            if (rightsibling.key_num > M / 2) {
+              // 拉取右兄弟的第一位到 curnode 的末尾
+              curnode.keys[curnode.key_num] = rightsibling.keys[0];
+              curnode.set_value(curnode.key_num, rightsibling.get_value(0));
+              curnode.key_num++;
+              for (int i = 0; i < rightsibling.key_num - 1; i++) {
+                rightsibling.keys[i] = rightsibling.keys[i + 1];
+                rightsibling.set_value(i, rightsibling.get_value(i + 1));
+              }
+              rightsibling.key_num--;
+              
+              // 【核心修复点】：父节点存放的是 curnode (即左子树) 的最大值
+              // 当前 curnode 的最大值就是我们刚刚追加到末尾的那个键
+              parentnode.keys[curk] = curnode.keys[curnode.key_num - 1]; 
+              
+              fm.WritePage(cur_page, &curnode);
+              fm.WritePage(rightpage, &rightsibling);
+              fm.WritePage(parentpage, &parentnode);
+              return;
+            }
+          }
+          if (curk > 0) {
+            uint32_t leftpage = parentnode.get_child(curk - 1);
+            sibling(leftpage, cur_page);
+          } else if (curk < parentnode.key_num) {
+            uint32_t rightpage = parentnode.get_child(curk + 1);
+            sibling(cur_page, rightpage);
           }
           return;
         }
-        k++;
       }
-      if (curnode.next != 0) {
-        x = curnode.next;
-        fm.ReadPage(x, &curnode);
-      } else {
-        return;
-      }
-    }
-  }
-  sjtu::vector<ValueType> find_by_index(const String64 &index) {
-    sjtu::vector<ValueType> ans;
-    if (root_page_ == 0)
-      return ans;
-    IndexValueKey lower_key(index, std::numeric_limits<int>::min());
-    uint32_t cur_page = root_page_;
-    NodePage cur_node;
-    while (true) {
-      fm.ReadPage(cur_page, &cur_node);
-      if (cur_node.is_leaf)
+      if (curnode.next == 0)
         break;
-      int i = 0;
-      for (; i < cur_node.key_num; ++i) {
-        if (cur_node.keys[i] >= lower_key)
-          break;
-      }
-      cur_page = cur_node.children[i];
-    }
-    while (true) {
-      fm.ReadPage(cur_page, &cur_node);
-      for (int i = 0; i < cur_node.key_num; ++i) {
-        if (cur_node.keys[i].index == index) {
-          ans.push_back(cur_node.keys[i].value);
-        } else if (cur_node.keys[i].index > index) {
-          return ans;
-        }
-      }
-      if (cur_node.next == 0)
-        break;
-      cur_page = cur_node.next;
-    }
-    return ans;
-  }
-  void input(uint32_t pageno) {
-    std::cerr << pageno << std::endl;
-    NodePage x;
-    uint32_t num;
-    num = pageno;
-    fm.ReadPage(num, &x);
-    if (x.is_leaf == true) {
-      std::cerr << "leaf\n";
-      for (int i = 0; i < x.key_num; i++) {
-        std::cout << x.values[i] << ' ';
-      }
-      std::cout << std::endl;
-      return;
-    }
-    std::cerr << x.key_num << " children\n";
-    for (int i = 0; i <= x.key_num; i++) {
-      std::cerr << pageno << "'s child is " << x.values[i] << std::endl;
-      input(x.children[i]);
+      cur_page = curnode.next;
     }
   }
 };

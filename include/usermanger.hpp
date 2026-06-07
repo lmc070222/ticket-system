@@ -11,7 +11,7 @@ struct UsernameKey {
     UsernameKey() { std::memset(str, 0, sizeof(str)); }
     UsernameKey(const char* s) {
         std::memset(str, 0, sizeof(str));
-        std::strncpy(str, s, 21);
+        std::strcpy(str, s);
     }
     bool operator<(const UsernameKey& other) const {
         return std::strcmp(str, other.str) < 0;
@@ -128,7 +128,8 @@ public:
         usertree.Insert(target_key, newuser);
         auto it_target = logstack.find(target_key);
         if (it_target != logstack.end()) {
-            (*it_target).second = newuser; 
+            logstack.erase (it_target) ;
+            logstack.insert({target_key,newuser}); 
         }
         return true;
     }
