@@ -86,8 +86,8 @@ class trainmanager {
   public:
   friend usermanager;
 
-  Bplustree<trainKey, Train, 3> traintree;                            
-  Bplustree<SeatKey, SeatInfo, 10> seattree;                          
+  Bplustree<trainKey, Train, 12> traintree;                            
+  Bplustree<SeatKey, SeatInfo, 12> seattree;                          
   Bplustree<StationKey, StationInfo, 45> stationtree;                   
   Bplustree<OrderKey, Order, 22> ordertree;                            
   Bplustree<WaitlistKey, WaitlistInfo, 60> waitlisttree;              

@@ -1,5 +1,6 @@
 #ifndef Bplustree_HPP
 #define Bplustree_HPP
+
 #include "src/vector.hpp"
 #include <cstdint>
 #include <cstring>
@@ -7,7 +8,6 @@
 #include <ios>
 #include <iostream>
 #include <string>
-#include <type_traits>
 
 struct String64 {
   char data[64];
@@ -69,9 +69,11 @@ struct IndexValueKey {
 
 template <typename KeyType, typename ValueType, int M> class Bplustree {
 public:
+  // 扩展了文件头结构，添加了 free_head 用以记录空闲可复用页面链表的头部偏移
   struct FileHeader {
     uint32_t root_page;
     uint32_t leaf_head;
+    uint32_t free_head; 
   };
 
 #pragma pack(push, 1)
@@ -263,22 +265,25 @@ public:
   FileManager fm;
   uint32_t root_page_;
   uint32_t leaf_head_;
+  uint32_t free_head_; 
   
   Bplustree(const std::string &filename)
       : filename_path(filename), fm(filename_path), root_page_(0),
-        leaf_head_(0) {
+        leaf_head_(0), free_head_(0) {
     fm.s.seekg(0, std::ios::end);
     auto fileSize = fm.s.tellg();
     if (fileSize < sizeof(FileHeader)) {
       FileHeader init;
       init.root_page = 0;
       init.leaf_head = 0;
+      init.free_head = 0;
       fm.WriteHeader(&init);
     } else {
       FileHeader header;
       fm.ReadHeader(&header);
       root_page_ = header.root_page;
       leaf_head_ = header.leaf_head;
+      free_head_ = header.free_head;
     }
   }
   
@@ -286,12 +291,52 @@ public:
     fm.clear_file();
     root_page_ = 0;
     leaf_head_ = 0;
+    free_head_ = 0;
     FileHeader init;
     init.root_page = 0;
     init.leaf_head = 0;
+    init.free_head = 0;
     fm.WriteHeader(&init);
   }
-  
+
+private:
+  uint32_t allocatePage(NodePage *buf) {
+    if (free_head_ != 0) {
+      uint32_t allocated_page = free_head_;
+      NodePage reused_node;
+      fm.ReadPage(allocated_page, &reused_node);
+      free_head_ = reused_node.next; 
+      
+      fm.WritePage(allocated_page, buf);
+      
+      FileHeader header;
+      header.root_page = root_page_;
+      header.leaf_head = leaf_head_;
+      header.free_head = free_head_;
+      fm.WriteHeader(&header);
+      return allocated_page;
+    } else {
+      return fm.AllocPage(buf); 
+    }
+  }
+  void recyclePage(uint32_t page_no) {
+    if (page_no == 0) return;
+    NodePage dummy;
+    fm.ReadPage(page_no, &dummy);
+    dummy.next = free_head_; 
+    dummy.is_leaf = false;
+    fm.WritePage(page_no, &dummy);
+    
+    free_head_ = page_no;
+    
+    FileHeader header;
+    header.root_page = root_page_;
+    header.leaf_head = leaf_head_;
+    header.free_head = free_head_;
+    fm.WriteHeader(&header);
+  }
+
+public:
   sjtu::vector<ValueType> find_by_index(const KeyType &index) {
     sjtu::vector<ValueType> ans;
     if (root_page_ == 0)
@@ -342,7 +387,7 @@ public:
     curnode.key_num = mid;
 
     new_node.parent = curnode.parent;
-    uint32_t new_page = fm.AllocPage(&new_node);
+    uint32_t new_page = allocatePage(&new_node); 
     for (int i = 0; i <= new_node.key_num; i++) {
       uint32_t child_no = new_node.get_child(i);
       NodePage child;
@@ -368,7 +413,7 @@ public:
       new_parent.keys[0] = key;
       new_parent.set_child(0, leftPageNo);
       new_parent.set_child(1, rightPageNo);
-      leftnode.parent = fm.AllocPage(&new_parent);
+      leftnode.parent = allocatePage(&new_parent);
       rightnode.parent = leftnode.parent;
       FileHeader fileheader;
       fm.ReadHeader(&fileheader);
@@ -418,7 +463,7 @@ public:
     new_leaf.parent = curnode.parent;
 
     new_leaf.next = curnode.next;
-    curnode.next = fm.AllocPage(&new_leaf);
+    curnode.next = allocatePage(&new_leaf); 
 
     fm.WritePage(page_no, &curnode);
     InsertIntoParent(page_no, curnode.keys[curnode.key_num - 1], curnode.next);
@@ -437,9 +482,10 @@ public:
       new_.set_value(0, value);
       new_.parent = 0;
       new_.next = 0;
-      uint32_t new_page = fm.AllocPage(&new_);
+      uint32_t new_page = allocatePage(&new_); 
       FileHeader new_header;
       new_header.root_page = new_header.leaf_head = new_page;
+      new_header.free_head = free_head_;
       root_page_ = leaf_head_ = new_page;
       fm.WriteHeader(&new_header);
       return;
@@ -552,7 +598,7 @@ public:
       curnode.key_num = curnode.key_num + afternode.key_num + 1;
     }
     fm.WritePage(curno, &curnode);
-    fm.WritePage(afterno, &afternode);
+    recyclePage(afterno);
 
     int curk = -1, afterk = -1;
     for (int i = 0; i <= parentnode.key_num; i++) {
@@ -568,7 +614,9 @@ public:
       parentnode.set_child(i, parentnode.get_child(i + 1));
     }
     parentnode.key_num--;
-    fm.WritePage(curnode.parent, &parentnode);
+    
+    uint32_t parentpage = curnode.parent;
+    fm.WritePage(parentpage, &parentnode);
     
     if (parentnode.key_num >= M / 2)
       return;
@@ -580,9 +628,11 @@ public:
           fm.ReadPage(onlyChild, &only);
           only.parent = 0;
           root_page_ = onlyChild;
+          recyclePage(parentpage);
           FileHeader header;
           header.root_page = root_page_;
           header.leaf_head = leaf_head_;
+          header.free_head = free_head_;
           fm.WriteHeader(&header);
           fm.WritePage(onlyChild, &only);
         }
@@ -652,7 +702,6 @@ public:
             }
           }
           
-          // 向右借位
           if (curk < parentnode.key_num) {
             NodePage rightsibling;
             uint32_t rightpage = parentnode.get_child(curk + 1);
@@ -691,12 +740,14 @@ public:
     }
   }
 };
+
 template <typename T>
 void my_swap(T& a, T& b) {
     T temp = a;
     a = b;
     b = temp;
 }
+
 template<typename RandomIt, typename Compare>
 void my_sort(RandomIt first, RandomIt last, Compare comp) {
     if (last - first <= 1) return;
@@ -715,4 +766,5 @@ void my_sort(RandomIt first, RandomIt last, Compare comp) {
     if (first < right + 1) my_sort(first, right + 1, comp);
     if (left < last) my_sort(left, last, comp);
 }
+
 #endif
