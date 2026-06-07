@@ -34,11 +34,11 @@ struct trainKey {
 class trainmanager {
   public:
   friend usermanager;
-  Bplustree<trainKey, Train, 60> traintree;
-  Bplustree<SeatKey, SeatInfo, 60> seattree;
-  Bplustree<StationKey, StationInfo, 60> stationtree;
-  Bplustree<OrderKey, Order, 60> ordertree;
-  Bplustree<WaitlistKey, WaitlistInfo, 60> waitlisttree;
+  Bplustree<trainKey, Train, 80> traintree;
+  Bplustree<SeatKey, SeatInfo, 80> seattree;
+  Bplustree<StationKey, StationInfo, 70> stationtree;
+  Bplustree<OrderKey, Order, 40> ordertree;
+  Bplustree<WaitlistKey, WaitlistInfo, 50> waitlisttree;
   trainmanager () : traintree("traintree"),seattree("seattree"),stationtree("stationtree") ,ordertree("ordertree"),
   waitlisttree("waitlisttree"){
 

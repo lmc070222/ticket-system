@@ -128,7 +128,7 @@ public:
       
       CachePage() : page_no(0), is_dirty(false) {}
     };
-    static const int CACHE_SIZE = 16;
+    static const int CACHE_SIZE = 8;
     CachePage cache[CACHE_SIZE];
     int replace_idx;
 

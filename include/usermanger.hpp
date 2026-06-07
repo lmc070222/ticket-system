@@ -33,7 +33,7 @@ struct UsernameKey {
 class usermanager {
 public:
     std::string filename = "usertree";
-    Bplustree<UsernameKey, user, 60> usertree; 
+    Bplustree<UsernameKey, user, 70> usertree; 
     sjtu::map<UsernameKey, user> logstack;
     usermanager () : usertree(filename) {
         
