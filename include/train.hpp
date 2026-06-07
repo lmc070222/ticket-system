@@ -145,11 +145,11 @@ struct daytime {
 struct Train {
   int station_num;
   int seat_num;
-  char stations[102][52];
-  int prices[102];
+  char stations[32][52];
+  int prices[32];
   daytime starttimes;
-  int arrival_times[102];
-  int leaving_times[102];
+  int arrival_times[32];
+  int leaving_times[32];
   char type;
   bool is_released;
   saledate sale_date;
@@ -189,7 +189,7 @@ struct SeatKey {
   bool operator<=(const SeatKey &other) const { return *this < other or *this == other; }
 };
 struct SeatInfo {
-  int seats[102];
+  int seats[30];
   int waitlist_count; // 该天该车排队候补的人数
   
   SeatInfo() = default;

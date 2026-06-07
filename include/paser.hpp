@@ -204,11 +204,11 @@ public:
       char trainid[22];
       int station_num;
       int seat_num;
-      char stations[102][52];
-      int prices[102];
+      char stations[32][52];
+      int prices[32];
       daytime starttimes;
-      int travel_times[102];
-      int leaving_times[102];
+      int travel_times[32];
+      int leaving_times[32];
       char type;
       
       strcpy (trainid, current_cmd.args['i'].c_str());

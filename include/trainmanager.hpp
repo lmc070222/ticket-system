@@ -97,8 +97,8 @@ class trainmanager {
                     station_to_stationtree("station_to_stationtree") {}
 
   bool add_train(char trainid[22], int stationnum, int seatnum,
-                 char stations[102][52], int prices[102], daytime starttimes,
-                 int traveltimes[102], int stopovertimes[102],
+                 char stations[32][52], int prices[32], daytime starttimes,
+                 int traveltimes[32], int stopovertimes[32],
                  saledate sale_date, char type) {
     trainKey x(trainid);
     sjtu::vector<Train> y = traintree.find_by_index(x);
@@ -107,8 +107,8 @@ class trainmanager {
     Train z;
     z.station_num = stationnum;
     z.seat_num = seatnum;
-    memcpy(z.stations, stations, 102 * 52);
-    for (int i = 0; i < 102; i++)
+    memcpy(z.stations, stations, 32 * 52);
+    for (int i = 0; i < 32; i++)
       z.prices[i] = prices[i];
     z.type = type;
     z.sale_date = sale_date;
@@ -152,7 +152,7 @@ class trainmanager {
     memset(sk.trainID, 0, 22);
     strcpy(sk.trainID, trainid);
     SeatInfo si;
-    for (int i = 0; i < 102; i++)
+    for (int i = 0; i < 32; i++)
       si.seats[i] = target.seat_num;
     si.waitlist_count = 0;
     for (auto i = target.sale_date.startdate; i <= target.sale_date.enddate; i++) {
