@@ -69,7 +69,6 @@ struct IndexValueKey {
 
 template <typename KeyType, typename ValueType, int M> class Bplustree {
 public:
-  // 扩展了文件头结构，添加了 free_head 用以记录空闲可复用页面链表的头部偏移
   struct FileHeader {
     uint32_t root_page;
     uint32_t leaf_head;
